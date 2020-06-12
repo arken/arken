@@ -8,4 +8,5 @@ import (
 
 func main() {
 	fmt.Println(config.Global.General.Version)
+	fmt.Println(config.Keysets.Sets)
 }

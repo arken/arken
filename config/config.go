@@ -18,7 +18,9 @@ type Config struct {
 
 // general defines the substruct about general application settings.
 type general struct {
-	Version string
+	Version      string
+	PoolSize     string
+	NetworkLimit string
 }
 
 // database defines database specific config settings.
@@ -28,7 +30,8 @@ type database struct {
 
 // sources defines where to look for the local cloned Keyset repositories
 type sources struct {
-	Path string
+	Config       string
+	Repositories string
 }
 
 var (
@@ -54,6 +57,7 @@ func init() {
 		reloadConf()
 		readConf(&Global)
 	}
+	readSources(&Keysets)
 }
 
 // Read the config or create a new one if it doesn't exist.

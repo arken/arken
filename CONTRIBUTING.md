@@ -5,4 +5,14 @@
 4. You're ready to go :P
 
 ## Configuration
+##### arken.config (Main configuration file)
 Arken stores it's `arken.config` file in a `.arken` folder in your home directory. This configuration file is written in TOML for an easy to understand format.
+
+##### keysets.yaml
+Arken stores the list of keysets it watches in an easily editable keysets.yaml file within the same `.arken` directory. To add a keyset simply add another line beginning with a dash.
+
+```yaml
+keysets:
+- https://github.com/archivalists/core-keyset-testing
+- https://github.com/alecbcs/core-fork
+```

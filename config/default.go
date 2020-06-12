@@ -16,7 +16,9 @@ func defaultConf() Config {
 			// Configuration version number. If a field is added or changed
 			// in this default, the version must be changed to tell the app
 			// to rebuild the users config files.
-			Version: "0.0.1",
+			Version:      "0.0.1",
+			PoolSize:     "50 GB",
+			NetworkLimit: "50 GB",
 		},
 		Database: database{
 			// This is the path to the backend database.
@@ -24,8 +26,9 @@ func defaultConf() Config {
 			Path: filepath.Join(filepath.Dir(path), "keys.db"),
 		},
 		Sources: sources{
+			Config: filepath.Join(filepath.Dir(path), "keysets.yaml"),
 			// Upstream Keyset repositories will be cloned to this location.
-			Path: filepath.Join(filepath.Dir(path), "keysets"),
+			Repositories: filepath.Join(filepath.Dir(path), "repositories"),
 		},
 	}
 	return result
