@@ -63,7 +63,7 @@ func init() {
 // Read the config or create a new one if it doesn't exist.
 func readConf(conf *Config) {
 	_, err := toml.DecodeFile(path, &conf)
-	if os.IsNotExist(err) {
+	if os.IsNotExist(err) 
 		genConf(defaultConf())
 		readConf(conf)
 	}

@@ -4,9 +4,13 @@ import (
 	"fmt"
 
 	"github.com/archivalists/arken/config"
+	"github.com/archivalists/arken/keysets"
 )
 
 func main() {
-	fmt.Println(config.Global.General.Version)
-	fmt.Println(config.Keysets.Sets)
+	fmt.Println("Welcome to Arken!")
+	fmt.Printf("Application Version %s\n\n", config.Global.General.Version)
+
+	fmt.Println("Arken is now in Startup")
+	keysets.Index(config.Keysets.Sets)
 }
