@@ -10,12 +10,12 @@ import (
 	"github.com/go-git/go-git/v5"
 )
 
-// Index takes a list of keysets and indexes the keys within them.
+// LoadSets takes a list of keysets and indexes the keys within them.
 // cloning the repositories if not found locally and pulling updates
 // to local repositories.
-func Index(keysets []string) {
+func LoadSets(keysets []string) {
 	for repo := range keysets {
-		fmt.Println(keysets[repo])
+		fmt.Printf("Indexing: %s\n", keysets[repo])
 		location := filepath.Join(config.Global.Sources.Repositories, filepath.Base(keysets[repo]))
 		r, err := git.PlainOpen(location)
 		if err != nil && err.Error() == "repository does not exist" {
@@ -39,10 +39,13 @@ func Index(keysets []string) {
 			}
 
 			err = w.Pull(&git.PullOptions{RemoteName: "origin"})
-			if err != nil && err.Error() != "already up-to-date" {
+			if err != nil && err.Error() == "already up-to-date" {
+				continue
+			}
+			if err != nil {
 				log.Fatal(err)
 			}
 		}
-
+		index(filepath.Join(config.Global.Sources.Repositories, filepath.Base(keysets[repo])))
 	}
 }

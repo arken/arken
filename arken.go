@@ -11,6 +11,6 @@ func main() {
 	fmt.Println("Welcome to Arken!")
 	fmt.Printf("Application Version %s\n\n", config.Global.General.Version)
 
-	fmt.Println("Arken is now in Startup")
-	keysets.Index(config.Keysets.Sets)
+	fmt.Println("Arken is now in [System Startup]")
+	keysets.LoadSets(config.Keysets.Sets)
 }
