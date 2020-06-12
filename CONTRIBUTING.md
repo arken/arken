@@ -1,7 +1,7 @@
 ## Go Instructions
 1. Install `golang` from your distribution repository.
 2. Clone the repository `git clone https://github.com/archivalists/arken`
-3. `go run arken.go` (This will pull down all dependencies and start the program.)
+3. Type `go run arken.go` (This will pull down all dependencies and start the program.)
 4. You're ready to go :P
 
 ## Configuration
