@@ -25,7 +25,8 @@ func Get(db *sql.DB, id string) (result FileKey, err error) {
 		&result.ID,
 		&result.Name,
 		&result.Size,
-		&result.Status)
+		&result.Status,
+		&result.KeySet)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,14 +34,14 @@ func Get(db *sql.DB, id string) (result FileKey, err error) {
 }
 
 // GetAll opens a channel and reads each entry matching the status into the channel.
-func GetAll(db *sql.DB, status string, output chan FileKey) {
+func GetAll(db *sql.DB, status string, keySet string, output chan FileKey) {
 	err := db.Ping()
 	if err != nil {
 		close(output)
 		log.Fatal(err)
 	}
 
-	rows, err := db.Query("SELECT * FROM keys WHERE status = ?", status)
+	rows, err := db.Query("SELECT * FROM keys WHERE status = ? AND keyset = ?", status, keySet)
 	if err != nil {
 		close(output)
 		log.Fatal(err)
@@ -51,7 +52,7 @@ func GetAll(db *sql.DB, status string, output chan FileKey) {
 	for rows.Next() {
 		var key FileKey
 
-		err = rows.Scan(&key.ID, &key.Name, &key.Size, &key.Status)
+		err = rows.Scan(&key.ID, &key.Name, &key.Size, &key.Status, &key.KeySet)
 		if err != nil {
 			close(output)
 			log.Fatal(err)

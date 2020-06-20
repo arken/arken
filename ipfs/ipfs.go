@@ -61,7 +61,6 @@ func init() {
 	}
 
 	go connectToPeers(ctx, ipfs, bootstrapNodes)
-	AtRiskThreshhold = 5
 }
 
 func setupPlugins(externalPluginsPath string) error {

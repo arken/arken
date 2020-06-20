@@ -30,8 +30,9 @@ func Insert(db *sql.DB, entry FileKey) {
 			id,
 			name,
 			size,
-			status
-		) VALUES(?,?,?,?);`)
+			status,
+			keyset
+		) VALUES(?,?,?,?,?);`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,7 +40,8 @@ func Insert(db *sql.DB, entry FileKey) {
 		entry.ID,
 		entry.Name,
 		entry.Size,
-		entry.Status)
+		entry.Status,
+		entry.KeySet)
 
 	if err != nil {
 		log.Fatal(err)

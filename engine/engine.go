@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"path/filepath"
+
 	"github.com/archivalists/arken/config"
 	"github.com/archivalists/arken/database"
 )
@@ -10,9 +12,11 @@ import (
 func Rebalance() (err error) {
 	db, err := database.Open(config.Global.Database.Path)
 
-	err = ScanHostReplications(db)
-	if err != nil {
-		return err
+	for set := range config.Keysets.Sets {
+		err = ScanHostReplications(db, filepath.Base(config.Keysets.Sets[set]))
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -29,7 +29,7 @@ func index(rootPath string) {
 			for scanner.Scan() {
 				data := strings.Split(scanner.Text(), " : ")
 				fmt.Println(data)
-				err = database.Add(db, database.FileKey{ID: data[1], Name: data[0], Size: -1, Status: "remote"})
+				err = database.Add(db, database.FileKey{ID: data[1], Name: data[0], Size: -1, Status: "remote", KeySet: filepath.Base(rootPath)})
 				if err != nil {
 					log.Fatal(err)
 				}

@@ -8,10 +8,10 @@ import (
 
 // FindProvs queries the IPFS network for the number of
 // providers hosting a given file
-func FindProvs(hash string) (replications int, err error) {
+func FindProvs(hash string, maxPeers int) (replications int, err error) {
 	path := icorepath.New("/ipfs/" + hash)
 	output, err := ipfs.Dht().FindProviders(ctx, path, func(input *options.DhtFindProvidersSettings) error {
-		input.NumProviders = AtRiskThreshhold
+		input.NumProviders = maxPeers
 		return nil
 	})
 	if err != nil {

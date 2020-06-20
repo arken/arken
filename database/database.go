@@ -12,6 +12,7 @@ type FileKey struct {
 	Name   string
 	Size   int
 	Status string
+	KeySet string
 }
 
 // Open opens the Arken SQLite database or creates one if one is not found.
@@ -27,6 +28,7 @@ func Open(path string) (db *sql.DB, err error) {
 			name TEXT NOT NULL,
 			size INT(11),
 			status TEXT NOT NULL,
+			keyset TEXT NOT NULL,
 
 			PRIMARY KEY(id)
 		);
