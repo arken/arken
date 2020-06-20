@@ -32,6 +32,7 @@ type database struct {
 type sources struct {
 	Config       string
 	Repositories string
+	Storage      string
 }
 
 var (

@@ -31,3 +31,34 @@ func Get(db *sql.DB, id string) (result FileKey, err error) {
 	}
 	return result, nil
 }
+
+// GetAll opens a channel and reads each entry matching the status into the channel.
+func GetAll(db *sql.DB, status string, output chan FileKey) {
+	err := db.Ping()
+	if err != nil {
+		close(output)
+		log.Fatal(err)
+	}
+
+	rows, err := db.Query("SELECT * FROM keys WHERE status = ?", status)
+	if err != nil {
+		close(output)
+		log.Fatal(err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var key FileKey
+
+		err = rows.Scan(&key.ID, &key.Name, &key.Size, &key.Status)
+		if err != nil {
+			close(output)
+			log.Fatal(err)
+		}
+
+		output <- key
+	}
+
+	close(output)
+}
