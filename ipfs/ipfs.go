@@ -28,12 +28,16 @@ var (
 	ipfs   icore.CoreAPI
 	ctx    context.Context
 	cancel context.CancelFunc
+	// AtRiskThreshhold is the number of peers for a piece
+	// of data to be backed up on to be considered safe.
+	AtRiskThreshhold int
 )
 
 func init() {
+	var err error
 	ctx, cancel = context.WithCancel(context.Background())
 
-	ipfs, err := spawnNode(ctx, arkenConf.Global.Sources.Storage)
+	ipfs, err = spawnNode(ctx, arkenConf.Global.Sources.Storage)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,6 +61,7 @@ func init() {
 	}
 
 	go connectToPeers(ctx, ipfs, bootstrapNodes)
+	AtRiskThreshhold = 5
 }
 
 func setupPlugins(externalPluginsPath string) error {

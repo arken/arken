@@ -56,7 +56,6 @@ func GetAll(db *sql.DB, status string, output chan FileKey) {
 			close(output)
 			log.Fatal(err)
 		}
-
 		output <- key
 	}
 

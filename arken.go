@@ -16,5 +16,7 @@ func main() {
 	fmt.Println("Arken is now in [System Startup]")
 	keysets.LoadSets(config.Keysets.Sets)
 
+	fmt.Println("\n[Starting Rebalancing]")
+
 	engine.Rebalance()
 }

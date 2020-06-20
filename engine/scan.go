@@ -7,15 +7,14 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/archivalists/arken/ipfs"
-
 	"github.com/archivalists/arken/database"
+	"github.com/archivalists/arken/ipfs"
 )
 
 // ScanHostReplications scans remote files from imported keysets and queries
 // the ipfs network for the number of peers hosting that file.
 func ScanHostReplications(db *sql.DB) (err error) {
-	output := make(chan database.FileKey)
+	input := make(chan database.FileKey)
 	atRisk := make(chan database.FileKey)
 
 	workers := genNumWorkers()
@@ -25,9 +24,9 @@ func ScanHostReplications(db *sql.DB) (err error) {
 	wg.Add(workers)
 
 	// Get all will read db entries and put in queue for workers.
-	go database.GetAll(db, "remote", output)
+	go database.GetAll(db, "remote", input)
 	for i := 0; i < workers; i++ {
-		go runWorker(&wg, output, atRisk)
+		go runWorker(&wg, input, atRisk)
 	}
 
 	// Create a go routine to wait till all workers are finished before closing channel.
@@ -36,10 +35,10 @@ func ScanHostReplications(db *sql.DB) (err error) {
 		close(atRisk)
 	}()
 
-	// // Update all db entires that are out-of-date.
-	// for key := range atRisk {
-
-	// }
+	// Update all db entires that are out-of-date.
+	for key := range atRisk {
+		fmt.Println(key.ID)
+	}
 
 	return nil
 }
@@ -60,11 +59,12 @@ func runWorker(wg *sync.WaitGroup, input <-chan database.FileKey, output chan<- 
 			log.Fatal(err)
 		}
 
-		fmt.Println(replications)
+		fmt.Printf("File: %s is backed up at least %d time(s).\n", key.ID, replications)
 
-		// if replications < ipfs.AtRiskThreshhold {
-		// 	key.Status = "AtRisk"
-		// 	output <- key
-		// }
+		if replications < ipfs.AtRiskThreshhold {
+			key.Status = "AtRisk"
+			output <- key
+		}
 	}
+	wg.Done()
 }
