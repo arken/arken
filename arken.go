@@ -33,8 +33,8 @@ func main() {
 
 		fmt.Println("\n[Finished Data Rebalance]")
 
-		fmt.Printf("\n[System Sleeping for 10 Seconds]")
+		fmt.Printf("\n[System Sleeping for 1 Hour]")
 
-		time.Sleep(10 * time.Second)
+		time.Sleep(1 * time.Hour)
 	}
 }
