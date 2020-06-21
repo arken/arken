@@ -13,12 +13,7 @@ import (
 
 // ScanHostReplications scans remote files from imported keysets and queries
 // the ipfs network for the number of peers hosting that file.
-func ScanHostReplications(db *sql.DB, keySet string) (err error) {
-
-	threshold, err := CalcThreshold("QmZtmD2qt6fJot32nabSP3CUjicnypEBz7bHVDhPQt9aAy", 2)
-	if err != nil {
-		return err
-	}
+func ScanHostReplications(db *sql.DB, keySet string, threshold int) (err error) {
 
 	fmt.Printf("Calculated Threshold To Be: %d\n", threshold)
 
