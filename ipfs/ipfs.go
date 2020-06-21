@@ -91,8 +91,6 @@ func spawnNode(ctx context.Context, path string) (icore.CoreAPI, error) {
 
 	ipfs, err := createNode(ctx, path)
 	if err != nil {
-
-		fmt.Println("hit")
 		path, err = createRepo(ctx, path)
 		if err != nil {
 			return nil, err
