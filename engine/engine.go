@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"log"
 	"path/filepath"
 
@@ -12,11 +13,16 @@ import (
 // between nodes.
 func Rebalance() (err error) {
 	db, err := database.Open(config.Global.Database.Path)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
 
 	for set := range config.Keysets.Sets {
 		keySet := filepath.Base(config.Keysets.Sets[set])
 
-		threshold, err := CalcThreshold("QmZtmD2qt6fJot32nabSP3CUjicnypEBz7bHVDhPQt9aAy", 2)
+		fmt.Printf("Calculating File Minimum Nodes Threshold for %s\n", keySet)
+		threshold, err := CalcThreshold("QmQBywyRvS3MJCP8jbV4Bsz8WMbRFsoux6EjsEwHhBDWqe", 2)
 		if err != nil {
 			return err
 		}
@@ -27,9 +33,9 @@ func Rebalance() (err error) {
 		}
 
 		input := make(chan database.FileKey)
-		go database.GetAll(db, "AtRisk", keySet, input)
+		go database.GetAll(db, "atrisk", keySet, input)
 		for key := range input {
-			err := ReplicateAtRiskFile(key.ID, threshold)
+			err := ReplicateAtRiskFile(db, key, threshold)
 			if err != nil {
 				log.Println(err)
 			}

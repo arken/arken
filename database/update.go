@@ -11,7 +11,12 @@ func Update(db *sql.DB, key FileKey) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	stmt, err := db.Prepare(
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tx.Commit()
+	stmt, err := tx.Prepare(
 		`UPDATE keys SET
 			Status = ?
 			WHERE id = ?;`)

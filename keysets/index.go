@@ -17,6 +17,7 @@ func index(rootPath string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 	filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
 		if strings.HasSuffix(filepath.Base(path), ".ks") {
 			file, err := os.Open(path)

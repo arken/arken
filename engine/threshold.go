@@ -8,8 +8,8 @@ import (
 // number of nodes that should backup a file to ensure data protection.
 func CalcThreshold(lightHouseKey string, startNodes int) (threshold int, err error) {
 	// ToDo: Change this to 1000 and return 100 after development.
-	if startNodes > 10 {
-		return 10, nil
+	if startNodes > 1000 {
+		return 100, nil
 	}
 	maxNodes, err := ipfs.FindProvs(lightHouseKey, startNodes)
 	if err != nil {
@@ -18,7 +18,7 @@ func CalcThreshold(lightHouseKey string, startNodes int) (threshold int, err err
 	if maxNodes == startNodes {
 		return CalcThreshold(lightHouseKey, startNodes*2)
 	}
-	threshold = maxNodes
+	threshold = maxNodes / 10
 	if threshold < 5 {
 		threshold = 5
 	}
