@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/archivalists/arken/engine"
@@ -11,29 +12,34 @@ import (
 )
 
 func main() {
-	fmt.Println(`
-
-                                                 
+	fmt.Println(`                                            
     // | |                                       
    //__| |     __     / ___      ___       __    
   / ___  |   //  ) ) //\ \     //___) ) //   ) ) 
  //    | |  //      //  \ \   //       //   / /  
 //     | | //      //    \ \ ((____   //   / /   `)
+
 	fmt.Printf("Application Version %s\n\n", config.Global.General.Version)
 
 	fmt.Println("Arken is now in [System Startup]")
 	for {
 		fmt.Println("\n[Indexing & Updating Keysets]")
 
-		keysets.LoadSets(config.Keysets.Sets)
+		err := keysets.LoadSets(config.Keysets)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		fmt.Println("\n[Starting Rebalancing]")
 
-		engine.Rebalance()
+		err = engine.Rebalance()
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		fmt.Println("\n[Finished Data Rebalance]")
 
-		fmt.Printf("\n[System Sleeping for 1 Hour]")
+		fmt.Println("\n[System Sleeping for 1 Hour]")
 
 		time.Sleep(1 * time.Hour)
 	}

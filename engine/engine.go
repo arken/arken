@@ -18,11 +18,11 @@ func Rebalance() (err error) {
 	}
 	defer db.Close()
 
-	for set := range config.Keysets.Sets {
-		keySet := filepath.Base(config.Keysets.Sets[set])
+	for set := range config.Keysets {
+		keySet := filepath.Base(config.Keysets[set].URL)
 
 		fmt.Printf("Calculating File Minimum Nodes Threshold for %s\n", keySet)
-		threshold, err := CalcThreshold("QmQBywyRvS3MJCP8jbV4Bsz8WMbRFsoux6EjsEwHhBDWqe", 2)
+		threshold, err := CalcThreshold(config.Keysets[set].LightHouseFileID, config.Keysets[set].ReplicationFactor, 2)
 		if err != nil {
 			return err
 		}

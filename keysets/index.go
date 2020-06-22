@@ -3,7 +3,6 @@ package keysets
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,19 +11,22 @@ import (
 	"github.com/archivalists/arken/database"
 )
 
-func index(rootPath string) {
+func index(rootPath string) (err error) {
 	db, err := database.Open(config.Global.Database.Path)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer db.Close()
-	filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+
+	// Walk through entire repository directory structure to look for .ks files.
+	err = filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+		// On each interation of the "walk" this function will check if a keyset
+		// file and parse for file IDs if true.
 		if strings.HasSuffix(filepath.Base(path), ".ks") {
 			file, err := os.Open(path)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
-			defer file.Close()
 
 			scanner := bufio.NewScanner(file)
 			for scanner.Scan() {
@@ -32,14 +34,16 @@ func index(rootPath string) {
 				fmt.Println(data)
 				err = database.Add(db, database.FileKey{ID: data[1], Name: data[0], Size: -1, Status: "remote", KeySet: filepath.Base(rootPath)})
 				if err != nil {
-					log.Fatal(err)
+					return err
 				}
 			}
-
 			if err := scanner.Err(); err != nil {
-				log.Fatal(err)
+				return err
 			}
+
+			file.Close()
 		}
 		return nil
 	})
+	return nil
 }

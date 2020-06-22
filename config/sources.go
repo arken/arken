@@ -11,40 +11,52 @@ import (
 
 var (
 	// Keysets is the configuration structure for the known keysets.
-	Keysets KeySources
+	Keysets  []KeySet
+	internal sourcesFileData
 )
 
-// KeySources defines the global structure housing the known keysets.
-type KeySources struct {
+// KeySet defines the global structure housing the known keysets.
+type KeySet struct {
+	URL               string
+	LightHouseFileID  string
+	ReplicationFactor float32
+}
+
+type sourcesFileData struct {
 	Sets []string `yaml:"keysets"`
 }
 
-func readSources(keysets *KeySources) {
+func readSources() {
 	// Parse Keysets Yaml file.
 	fileData, err := ioutil.ReadFile(Global.Sources.Config)
 	if os.IsNotExist(err) {
 		genSources(defaultSources())
-		readSources(keysets)
+		readSources()
 	}
 	if err != nil && !os.IsNotExist(err) {
 		log.Fatal(err)
 	}
 
-	err = yaml.Unmarshal(fileData, &Keysets)
+	err = yaml.Unmarshal(fileData, &internal)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	for set := range internal.Sets {
+		Keysets = append(Keysets, KeySet{URL: internal.Sets[set]})
+	}
+
 }
 
-func defaultSources() KeySources {
-	result := KeySources{
+func defaultSources() sourcesFileData {
+	result := sourcesFileData{
 		Sets: []string{"https://github.com/archivalists/core-keyset-testing"},
 	}
 
 	return result
 }
 
-func genSources(keyset KeySources) {
+func genSources(keyset sourcesFileData) {
 	os.MkdirAll(filepath.Dir(path), os.ModePerm)
 
 	out, err := yaml.Marshal(keyset)

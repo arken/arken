@@ -58,7 +58,7 @@ func init() {
 		reloadConf()
 		readConf(&Global)
 	}
-	readSources(&Keysets)
+	readSources()
 }
 
 // Read the config or create a new one if it doesn't exist.

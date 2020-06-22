@@ -19,8 +19,8 @@ func ReplicateAtRiskFile(db *sql.DB, file database.FileKey, threshold int) (err 
 	if err != nil {
 		return err
 	}
-	activationEnergy := float64(replications) / float64(threshold)
-	prob := rand.Float64()
+	activationEnergy := float32(replications) / float32(threshold)
+	prob := rand.Float32()
 
 	if prob > activationEnergy {
 		fmt.Printf("Pinning to Local Storage: %s\n", file.ID)
