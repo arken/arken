@@ -15,6 +15,6 @@ func importKeysetSettings(keyset *config.KeySet, rootPath string) (err error) {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Light House: %s\n", keyset.LightHouseFileID)
+	fmt.Printf("Found Light House File: %s\n", keyset.LightHouseFileID)
 	return nil
 }

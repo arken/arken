@@ -26,7 +26,9 @@ func Get(db *sql.DB, id string) (result FileKey, err error) {
 		&result.Name,
 		&result.Size,
 		&result.Status,
-		&result.KeySet)
+		&result.KeySet,
+		&result.Modified,
+		&result.Replications)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,7 +54,15 @@ func GetAll(db *sql.DB, status string, keySet string, output chan FileKey) {
 	for rows.Next() {
 		var key FileKey
 
-		err = rows.Scan(&key.ID, &key.Name, &key.Size, &key.Status, &key.KeySet)
+		err = rows.Scan(
+			&key.ID,
+			&key.Name,
+			&key.Size,
+			&key.Status,
+			&key.KeySet,
+			&key.Modified,
+			&key.Replications)
+
 		if err != nil {
 			close(output)
 			log.Fatal(err)

@@ -66,8 +66,9 @@ func runWorker(wg *sync.WaitGroup, threshold int, input <-chan database.FileKey,
 
 		if replications < threshold {
 			key.Status = "atrisk"
-			output <- key
 		}
+		key.Replications = replications
+		output <- key
 	}
 	wg.Done()
 }

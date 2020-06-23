@@ -15,6 +15,7 @@ func Add(db *sql.DB, input FileKey) (err error) {
 			return err
 		}
 	}
+	updateTime(db, input)
 	return nil
 }
 
@@ -31,8 +32,10 @@ func Insert(db *sql.DB, entry FileKey) {
 			name,
 			size,
 			status,
-			keyset
-		) VALUES(?,?,?,?,?);`)
+			keyset,
+			modified,
+			replications
+		) VALUES(?,?,?,?,?,datetime('now'),?);`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,9 +44,36 @@ func Insert(db *sql.DB, entry FileKey) {
 		entry.Name,
 		entry.Size,
 		entry.Status,
-		entry.KeySet)
+		entry.KeySet,
+		entry.Replications)
 
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func updateTime(db *sql.DB, entry FileKey) (err error) {
+	err = db.Ping()
+	if err != nil {
+		return err
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Commit()
+	stmt, err := tx.Prepare(
+		`UPDATE keys SET
+			modified = datetime('now')
+			WHERE id = ?;`)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(
+		entry.ID)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
