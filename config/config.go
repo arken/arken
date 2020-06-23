@@ -58,6 +58,7 @@ func init() {
 		reloadConf()
 		readConf(&Global)
 	}
+	ConsolidateEnvVars(&Global)
 	readSources()
 }
 
