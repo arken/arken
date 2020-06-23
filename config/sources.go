@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -27,6 +28,7 @@ type sourcesFileData struct {
 }
 
 func readSources() {
+	fmt.Println("read sources")
 	// Parse Keysets Yaml file.
 	fileData, err := ioutil.ReadFile(Global.Sources.Config)
 	if os.IsNotExist(err) {
@@ -57,14 +59,14 @@ func defaultSources() sourcesFileData {
 }
 
 func genSources(keyset sourcesFileData) {
-	os.MkdirAll(filepath.Dir(path), os.ModePerm)
+	os.MkdirAll(filepath.Dir(Global.Sources.Config), os.ModePerm)
 
 	out, err := yaml.Marshal(keyset)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = ioutil.WriteFile(filepath.Join(filepath.Dir(path), "keysets.yaml"), out, 0664)
+	err = ioutil.WriteFile(filepath.Join(filepath.Dir(Global.Sources.Config), "keysets.yaml"), out, 0664)
 	if err != nil {
 		log.Fatal(err)
 	}
