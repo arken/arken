@@ -38,8 +38,6 @@ func ConsolidateEnvVars(conf *Config) {
 					iter.FieldByName(fieldName).SetString(evVal)
 					fmt.Printf("Env. var. \"%v\" does not match internal"+
 						" memory. Updating memory value to \"%v\".\n", evName, evVal)
-				} else if !evExists {
-					fmt.Printf("Env. var \"%v\" not found, using \"%v\".\n", evName, iter.FieldByName(fieldName).String())
 				}
 			}
 		}

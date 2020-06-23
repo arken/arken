@@ -1,7 +1,7 @@
 # Dockerfile References: https://docs.docker.com/engine/reference/builder/
 
 # Start from the latest golang base image
-FROM golang:latest as builder
+FROM golang:alpine as builder
 
 # Add Maintainer Info
 LABEL maintainer="Alec Scott <alecbcs@github.com>"
@@ -17,6 +17,13 @@ RUN go mod download
 
 # Copy the source from the current directory to the Working Directory inside the container
 COPY . .
+
+# Install required packages for building Arken.
+RUN apk add --no-cache \
+    gcc \
+    build-base \ 
+    binutils \
+    musl-dev
 
 # Build the Go app
 RUN go build -o arken .

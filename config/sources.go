@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -28,7 +27,6 @@ type sourcesFileData struct {
 }
 
 func readSources() {
-	fmt.Println("read sources")
 	// Parse Keysets Yaml file.
 	fileData, err := ioutil.ReadFile(Global.Sources.Config)
 	if os.IsNotExist(err) {
