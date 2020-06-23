@@ -58,6 +58,7 @@ func init() {
 		reloadConf()
 		readConf(&Global)
 	}
+	ConsolidateEnvVars(&Global)
 	readSources()
 }
 
@@ -71,5 +72,4 @@ func readConf(conf *Config) {
 	if err != nil && !os.IsNotExist(err) {
 		log.Fatal(err)
 	}
-	ConsolidateEnvVars(&Global)
 }
