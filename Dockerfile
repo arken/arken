@@ -23,7 +23,8 @@ RUN apk add --no-cache \
     gcc \
     build-base \ 
     binutils \
-    musl-dev
+    musl-dev \
+    binutils-gold
 
 # Build the Go app
 RUN go build -o arken .
