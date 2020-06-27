@@ -2,7 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 
 	"github.com/archivalists/arken/config"
@@ -37,7 +36,7 @@ func Rebalance() (err error) {
 		for key := range input {
 			err := ReplicateAtRiskFile(db, key, threshold)
 			if err != nil {
-				log.Println(err)
+				return err
 			}
 		}
 	}

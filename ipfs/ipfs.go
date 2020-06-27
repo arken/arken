@@ -14,6 +14,8 @@ import (
 	config "github.com/ipfs/go-ipfs-config"
 	libp2p "github.com/ipfs/go-ipfs/core/node/libp2p"
 	icore "github.com/ipfs/interface-go-ipfs-core"
+	"github.com/ipfs/interface-go-ipfs-core/options"
+	icorepath "github.com/ipfs/interface-go-ipfs-core/path"
 	peerstore "github.com/libp2p/go-libp2p-peerstore"
 	ma "github.com/multiformats/go-multiaddr"
 
@@ -26,6 +28,7 @@ import (
 
 var (
 	ipfs   icore.CoreAPI
+	node   *core.IpfsNode
 	ctx    context.Context
 	cancel context.CancelFunc
 	// AtRiskThreshhold is the number of peers for a piece
@@ -64,6 +67,26 @@ func init() {
 	}
 
 	go connectToPeers(ctx, ipfs, bootstrapNodes)
+	go serve()
+}
+
+func serve() {
+	base := "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o"
+
+	err := Pin(base)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	path := icorepath.New("/ipfs/" + base)
+
+	err = ipfs.Dht().Provide(ctx, path, func(input *options.DhtProvideSettings) error {
+		input.Recursive = true
+		return nil
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func setupPlugins(externalPluginsPath string) error {
@@ -114,16 +137,19 @@ func createNode(ctx context.Context, repoPath string) (icore.CoreAPI, error) {
 	// Construct the node
 
 	nodeOptions := &core.BuildCfg{
-		Online:  true,
-		Routing: libp2p.DHTOption, // This option sets the node to be a full DHT node (both fetching and storing DHT Records)
+		Permanent: true,
+		Online:    true,
+		Routing:   libp2p.DHTOption, // This option sets the node to be a full DHT node (both fetching and storing DHT Records)
 		// Routing: libp2p.DHTClientOption, // This option sets the node to be a client DHT node (only fetching records)
 		Repo: repo,
 	}
 
-	node, err := core.NewNode(ctx, nodeOptions)
+	node, err = core.NewNode(ctx, nodeOptions)
 	if err != nil {
 		return nil, err
 	}
+
+	node.IsDaemon = true
 
 	// Attach the Core API to the constructed node
 	return coreapi.NewCoreAPI(node)
@@ -175,6 +201,8 @@ func createRepo(ctx context.Context, path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
 
 	// Create the repo with the config
 	err = fsrepo.Init(path, cfg)

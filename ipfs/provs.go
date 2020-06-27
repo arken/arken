@@ -20,7 +20,10 @@ func FindProvs(hash string, maxPeers int) (replications int, err error) {
 
 	count := 0
 	for range output {
-		count++
+		peer := <-output
+		if len(peer.Addrs) > 1 {
+			count++
+		}
 	}
 
 	return count, nil

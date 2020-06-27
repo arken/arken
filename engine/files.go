@@ -29,8 +29,10 @@ func ReplicateAtRiskFile(db *sql.DB, file database.FileKey, threshold int) (err 
 			return err
 		}
 		file.Status = "local"
-		database.Update(db, file)
+	} else {
+		file.Status = "remote"
 	}
+	database.Update(db, file)
 
 	return nil
 }
