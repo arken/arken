@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/archivalists/arken/config"
+	"github.com/arkenproject/arken/config"
 
 	"github.com/BurntSushi/toml"
 )

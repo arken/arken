@@ -1,6 +1,6 @@
 ## Go Instructions
 1. Install `golang` from your distribution repository.
-2. Clone the repository `git clone https://github.com/archivalists/arken`
+2. Clone the repository `git clone https://github.com/arkenproject/arken`
 3. Type `go run arken.go` (This will pull down all dependencies and start the program.)
 4. You're ready to go :P
 
@@ -13,6 +13,6 @@ Arken stores the list of keysets it watches in an easily editable keysets.yaml f
 
 ```yaml
 keysets:
-- https://github.com/archivalists/core-keyset-testing
+- https://github.com/arkenproject/core-keyset-testing
 - https://github.com/alecbcs/core-fork
 ```

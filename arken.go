@@ -5,10 +5,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/archivalists/arken/engine"
+	"github.com/arkenproject/arken/engine"
 
-	"github.com/archivalists/arken/config"
-	"github.com/archivalists/arken/keysets"
+	"github.com/arkenproject/arken/config"
+	"github.com/arkenproject/arken/keysets"
 )
 
 func main() {

@@ -3,7 +3,7 @@ A Tool to Create a Distributed Filesystem to Securely Backup the World's Importa
 
 ## What is the idea behind this project?
 
-Many researchers, museums, and archivalists are struggling to host and protect a vast amount of important public data. On the other hand, there are many of us developers, tinkerers, and general computer enthusists who have extra storage space on our home servers.
+Many researchers, museums, and arkenproject are struggling to host and protect a vast amount of important public data. On the other hand, there are many of us developers, tinkerers, and general computer enthusists who have extra storage space on our home servers.
 
 My idea for Arken is to build an autonomous system for organizing, balancing, and distributing this data to users who can donate their extra space. 
 

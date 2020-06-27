@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/archivalists/arken/config"
-	"github.com/archivalists/arken/database"
-	"github.com/archivalists/arken/ipfs"
+	"github.com/arkenproject/arken/config"
+	"github.com/arkenproject/arken/database"
+	"github.com/arkenproject/arken/ipfs"
 )
 
 func configLighthouse(hash string) (err error) {

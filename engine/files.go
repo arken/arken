@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/archivalists/arken/database"
-	"github.com/archivalists/arken/ipfs"
+	"github.com/arkenproject/arken/database"
+	"github.com/arkenproject/arken/ipfs"
 )
 
 /*

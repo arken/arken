@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/archivalists/arken/config"
-	"github.com/archivalists/arken/database"
+	"github.com/arkenproject/arken/config"
+	"github.com/arkenproject/arken/database"
 )
 
 func index(rootPath string) (err error) {

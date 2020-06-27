@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	arkenConf "github.com/archivalists/arken/config"
+	arkenConf "github.com/arkenproject/arken/config"
 
 	config "github.com/ipfs/go-ipfs-config"
 	libp2p "github.com/ipfs/go-ipfs/core/node/libp2p"

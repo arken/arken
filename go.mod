@@ -1,4 +1,4 @@
-module github.com/archivalists/arken
+module github.com/arkenproject/arken
 
 go 1.14
 

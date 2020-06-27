@@ -50,7 +50,7 @@ func readSources() {
 
 func defaultSources() sourcesFileData {
 	result := sourcesFileData{
-		Sets: []string{"https://github.com/archivalists/core-keyset-testing"},
+		Sets: []string{"https://github.com/arkenproject/core-keyset-testing"},
 	}
 
 	return result

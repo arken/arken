@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/archivalists/arken/database"
-	"github.com/archivalists/arken/ipfs"
+	"github.com/arkenproject/arken/database"
+	"github.com/arkenproject/arken/ipfs"
 )
 
 // ScanHostReplications scans remote files from imported keysets and queries

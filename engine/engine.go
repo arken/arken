@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/archivalists/arken/config"
-	"github.com/archivalists/arken/database"
+	"github.com/arkenproject/arken/config"
+	"github.com/arkenproject/arken/database"
 )
 
 // Rebalance manages balancing new and at risk files
