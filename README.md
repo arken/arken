@@ -5,19 +5,12 @@ A Tool to Create a Distributed Filesystem to Securely Backup the World's Importa
 ## Table of Contents
 
 - [A Bit of Backstory](#a-bit-of-backstory)
-
 - [What is Arken?](#what-is-arken)
-  
   - [What's a Keyset](#what's-a-keyset)
-    
     - [Keyset Security](#keyset-security)
-    
     - [Rebalancing Data Across the Comunity](#rebalancing-data-across-the-comunity)
-
 - [Getting Started](#getting-started)
-
 - [What's the process as someone who want's to backup important data?](#what's-the-process-as-someone-who-want's-to-backup-important-data?)
-
 - [What's the process as someone donating their extra storage space?](#what's-the-process-as-someone-donating-their-extra-storage-space?)
 
 ## A Bit of Backstory
