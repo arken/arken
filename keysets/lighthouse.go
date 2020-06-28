@@ -2,12 +2,10 @@ package keysets
 
 import (
 	"errors"
-	"fmt"
 	"path/filepath"
 
 	"github.com/arkenproject/arken/config"
 	"github.com/arkenproject/arken/database"
-	"github.com/arkenproject/arken/ipfs"
 )
 
 func configLighthouse(hash string, url string) (err error) {
@@ -31,11 +29,5 @@ func configLighthouse(hash string, url string) (err error) {
 		return errors.New("couldn't add light house key")
 	}
 
-	// Pin Lighthouse File to determine the size of the active cluster.
-	fmt.Println("Pinning Lighthouse File...")
-	err = ipfs.Pin(hash)
-	if err != nil {
-		return err
-	}
 	return nil
 }

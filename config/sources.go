@@ -20,6 +20,7 @@ type KeySet struct {
 	URL               string
 	LightHouseFileID  string
 	ReplicationFactor float32
+	Gateway           string
 }
 
 type sourcesFileData struct {
@@ -32,6 +33,7 @@ func readSources() {
 	if os.IsNotExist(err) {
 		genSources(defaultSources())
 		readSources()
+		return
 	}
 	if err != nil && !os.IsNotExist(err) {
 		log.Fatal(err)
@@ -45,7 +47,6 @@ func readSources() {
 	for set := range internal.Sets {
 		Keysets = append(Keysets, KeySet{URL: internal.Sets[set]})
 	}
-
 }
 
 func defaultSources() sourcesFileData {

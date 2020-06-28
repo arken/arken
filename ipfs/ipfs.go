@@ -13,9 +13,8 @@ import (
 
 	config "github.com/ipfs/go-ipfs-config"
 	libp2p "github.com/ipfs/go-ipfs/core/node/libp2p"
+	migrate "github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	icore "github.com/ipfs/interface-go-ipfs-core"
-	"github.com/ipfs/interface-go-ipfs-core/options"
-	icorepath "github.com/ipfs/interface-go-ipfs-core/path"
 	peerstore "github.com/libp2p/go-libp2p-peerstore"
 	ma "github.com/multiformats/go-multiaddr"
 
@@ -36,7 +35,7 @@ var (
 	AtRiskThreshhold int
 )
 
-func init() {
+func Start() {
 	var err error
 	ctx, cancel = context.WithCancel(context.Background())
 
@@ -67,26 +66,6 @@ func init() {
 	}
 
 	go connectToPeers(ctx, ipfs, bootstrapNodes)
-	go serve()
-}
-
-func serve() {
-	base := "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o"
-
-	err := Pin(base)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	path := icorepath.New("/ipfs/" + base)
-
-	err = ipfs.Dht().Provide(ctx, path, func(input *options.DhtProvideSettings) error {
-		input.Recursive = true
-		return nil
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func setupPlugins(externalPluginsPath string) error {
@@ -131,7 +110,15 @@ func createNode(ctx context.Context, repoPath string) (icore.CoreAPI, error) {
 	// Open the repo
 	repo, err := fsrepo.Open(repoPath)
 	if err != nil {
-		return nil, err
+		if err == fsrepo.ErrNeedMigration {
+			migrate.DistPath = repoPath
+			err = migrate.RunMigration(fsrepo.RepoVersion)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	// Construct the node
@@ -206,6 +193,21 @@ func createRepo(ctx context.Context, path string) (string, error) {
 	cfg.Reprovider.Strategy = "all"
 	cfg.Reprovider.Interval = "1h"
 
+	for source := range arkenConf.Keysets {
+		cid := filepath.Base(arkenConf.Keysets[source].Gateway)
+		addr := filepath.Dir(filepath.Dir(arkenConf.Keysets[source].Gateway))
+		pid, err := peer.Decode(cid)
+		if err != nil {
+			return "", err
+		}
+
+		address, err := ma.NewMultiaddr(addr)
+		if err != nil {
+			return "", err
+		}
+
+		cfg.Peering.Peers = append(cfg.Peering.Peers, peer.AddrInfo{ID: pid, Addrs: []ma.Multiaddr{address}})
+	}
 	// Create the repo with the config
 	err = fsrepo.Init(path, cfg)
 	if err != nil {

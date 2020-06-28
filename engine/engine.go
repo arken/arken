@@ -6,6 +6,7 @@ import (
 
 	"github.com/arkenproject/arken/config"
 	"github.com/arkenproject/arken/database"
+	"github.com/arkenproject/arken/ipfs"
 )
 
 // Rebalance manages balancing new and at risk files
@@ -18,6 +19,13 @@ func Rebalance() (err error) {
 	defer db.Close()
 
 	for set := range config.Keysets {
+		// Pin Lighthouse File to determine the size of the active cluster.
+		fmt.Println("Pinning Lighthouse File...")
+		err = ipfs.Pin(config.Keysets[set].LightHouseFileID)
+		if err != nil {
+			return err
+		}
+
 		keySet := filepath.Base(config.Keysets[set].URL)
 
 		fmt.Printf("Calculating File Minimum Nodes Threshold for %s\n", keySet)

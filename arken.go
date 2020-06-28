@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/arkenproject/arken/ipfs"
+
 	"github.com/arkenproject/arken/engine"
 
 	"github.com/arkenproject/arken/config"
@@ -31,6 +33,8 @@ func main() {
 		}
 
 		fmt.Println("\n[Starting Rebalancing]")
+
+		ipfs.Start()
 
 		err = engine.Rebalance()
 		if err != nil {
