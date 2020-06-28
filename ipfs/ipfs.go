@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/ipfs/go-ipfs/peering"
+
 	arkenConf "github.com/arkenproject/arken/config"
 
 	config "github.com/ipfs/go-ipfs-config"
@@ -30,12 +32,13 @@ var (
 	node   *core.IpfsNode
 	ctx    context.Context
 	cancel context.CancelFunc
+	ps     *peering.PeeringService
 	// AtRiskThreshhold is the number of peers for a piece
 	// of data to be backed up on to be considered safe.
 	AtRiskThreshhold int
 )
 
-func Start() {
+func init() {
 	var err error
 	ctx, cancel = context.WithCancel(context.Background())
 
@@ -43,6 +46,8 @@ func Start() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	ps = peering.NewPeeringService(node.PeerHost)
 
 	bootstrapNodes := []string{
 		// IPFS Bootstrapper nodes.
@@ -66,6 +71,7 @@ func Start() {
 	}
 
 	go connectToPeers(ctx, ipfs, bootstrapNodes)
+	ps.Start()
 }
 
 func setupPlugins(externalPluginsPath string) error {
@@ -193,21 +199,6 @@ func createRepo(ctx context.Context, path string) (string, error) {
 	cfg.Reprovider.Strategy = "all"
 	cfg.Reprovider.Interval = "1h"
 
-	for source := range arkenConf.Keysets {
-		cid := filepath.Base(arkenConf.Keysets[source].Gateway)
-		addr := filepath.Dir(filepath.Dir(arkenConf.Keysets[source].Gateway))
-		pid, err := peer.Decode(cid)
-		if err != nil {
-			return "", err
-		}
-
-		address, err := ma.NewMultiaddr(addr)
-		if err != nil {
-			return "", err
-		}
-
-		cfg.Peering.Peers = append(cfg.Peering.Peers, peer.AddrInfo{ID: pid, Addrs: []ma.Multiaddr{address}})
-	}
 	// Create the repo with the config
 	err = fsrepo.Init(path, cfg)
 	if err != nil {
