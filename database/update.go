@@ -6,25 +6,18 @@ import (
 )
 
 // Update changes a file's status in the database.
-func Update(db *sql.DB, key FileKey) {
-	err := db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	}
-	tx, err := db.Begin()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer tx.Commit()
+func Update(tx *sql.Tx, key FileKey) {
 	stmt, err := tx.Prepare(
 		`UPDATE keys SET
-			Status = ?
+			Status = ?,
+			Replications = ?
 			WHERE id = ?;`)
 	if err != nil {
 		log.Fatal(err)
 	}
 	_, err = stmt.Exec(
 		key.Status,
+		key.Replications,
 		key.ID)
 
 	if err != nil {

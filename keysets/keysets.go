@@ -54,7 +54,7 @@ func LoadSets(keysets []config.KeySet) (err error) {
 			return err
 		}
 
-		err = configLighthouse(keysets[repo].LightHouseFileID)
+		err = configLighthouse(keysets[repo].LightHouseFileID, keysets[repo].URL)
 		if err != nil {
 			return err
 		}

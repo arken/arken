@@ -35,11 +35,19 @@ func Rebalance() (err error) {
 
 		input := make(chan database.FileKey)
 		go database.GetAll(db, "atrisk", keySet, input)
+		tx, err := db.Begin()
+		if err != nil {
+			return err
+		}
 		for key := range input {
-			err := ReplicateAtRiskFile(db, key, threshold)
+			err := ReplicateAtRiskFile(tx, key, threshold)
 			if err != nil {
 				return err
 			}
+		}
+		err = tx.Commit()
+		if err != nil {
+			return err
 		}
 	}
 

@@ -203,6 +203,8 @@ func createRepo(ctx context.Context, path string) (string, error) {
 	}
 
 	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
+	cfg.Reprovider.Strategy = "all"
+	cfg.Reprovider.Interval = "1h"
 
 	// Create the repo with the config
 	err = fsrepo.Init(path, cfg)
