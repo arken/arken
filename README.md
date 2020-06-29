@@ -70,6 +70,7 @@ docker run -d --name arken \
  -e ARKEN_SOURCES_CONFIG=/data/config/keysets.yaml \
  -e ARKEN_SOURCES_REPOSITORIES=/data/repositories \
  -e ARKEN_SOURCES_STORAGE=/data/storage \
+ -p 4001:4001
  --restart=always arkenproject/arken
 ```
 
