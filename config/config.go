@@ -14,6 +14,7 @@ type Config struct {
 	General  general
 	Database database
 	Sources  sources
+	Stats    stats
 }
 
 // general defines the substruct about general application settings.
@@ -33,6 +34,12 @@ type sources struct {
 	Config       string
 	Repositories string
 	Storage      string
+}
+
+// stats defines where to look for the stats configuration.
+type stats struct {
+	Username string
+	Email    string
 }
 
 var (

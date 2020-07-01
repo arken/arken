@@ -31,6 +31,10 @@ func defaultConf() Config {
 			Repositories: filepath.Join(filepath.Dir(path), "repositories"),
 			Storage:      filepath.Join(filepath.Dir(path), "storage"),
 		},
+		Stats: stats{
+			Username: "",
+			Email:    "",
+		},
 	}
 	return result
 }

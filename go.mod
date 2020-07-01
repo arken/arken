@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/BurntSushi/toml v0.3.1
+	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/ipfs/go-cid v0.0.6
 	github.com/ipfs/go-ipfs v0.6.0
