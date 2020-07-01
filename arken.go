@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arkenproject/arken/engine"
 	"github.com/arkenproject/arken/stats"
 
 	"github.com/arkenproject/arken/config"
@@ -33,10 +34,10 @@ func main() {
 
 		fmt.Println("\n[Starting Rebalancing]")
 
-		// err = engine.Rebalance()
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
+		err = engine.Rebalance()
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		fmt.Println("\n[Finished Data Rebalance]")
 

@@ -17,7 +17,7 @@ import (
 func Report(keysets []config.KeySet) (err error) {
 	// Generate Stats Data
 	// Parse allotted total amount of storage into bytes.
-	total, err := units.ParseBase2Bytes(config.Global.General.PoolSize)
+	total, err := units.ParseStrictBytes(config.Global.General.PoolSize)
 	if err != nil {
 		return err
 	}
