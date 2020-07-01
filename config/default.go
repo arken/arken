@@ -16,9 +16,10 @@ func defaultConf() Config {
 			// Configuration version number. If a field is added or changed
 			// in this default, the version must be changed to tell the app
 			// to rebuild the users config files.
-			Version:      "0.0.2",
-			PoolSize:     "50 GB",
-			NetworkLimit: "50 GB",
+			Version:        "0.0.1",
+			PoolSize:       "50 GB",
+			NetworkLimit:   "50 GB",
+			StatsReporting: "OFF",
 		},
 		Database: database{
 			// This is the path to the backend database.

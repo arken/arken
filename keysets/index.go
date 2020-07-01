@@ -11,11 +11,14 @@ import (
 	"github.com/arkenproject/arken/database"
 )
 
+// index walks through the repository structure and extracts file identifiers from found
+// .ks files.
 func index(rootPath string) (err error) {
 	db, err := database.Open(config.Global.Database.Path)
 	if err != nil {
 		return err
 	}
+	// Wait to close the database until all files have been indexed.
 	defer db.Close()
 
 	// Walk through entire repository directory structure to look for .ks files.
@@ -24,15 +27,25 @@ func index(rootPath string) (err error) {
 		// file and parse for file IDs if true.
 		if strings.HasSuffix(filepath.Base(path), ".ks") {
 			file, err := os.Open(path)
+			// This shouldn't be an error unless part of the keyset was
+			// corrupted in transit.
 			if err != nil {
 				return err
 			}
-
+			// Open the files for reading.
 			scanner := bufio.NewScanner(file)
+			// Scan one line at a time.
 			for scanner.Scan() {
-				data := strings.Split(scanner.Text(), " : ")
-				fmt.Println(data)
-				err = database.Add(db, database.FileKey{ID: data[1], Name: data[0], Size: -1, Status: "remote", KeySet: filepath.Base(rootPath)})
+				// Split data on white space.
+				data := strings.Fields(scanner.Text())
+				fmt.Printf("Parsed: %s\n", data)
+				// Add parsed file to database.
+				err = database.Add(db, database.FileKey{
+					ID:     data[1],
+					Name:   data[0],
+					Size:   -1,
+					Status: "remote",
+					KeySet: filepath.Base(rootPath)})
 				if err != nil {
 					return err
 				}
@@ -40,7 +53,7 @@ func index(rootPath string) (err error) {
 			if err := scanner.Err(); err != nil {
 				return err
 			}
-
+			// Close the file after fully parsed.
 			file.Close()
 		}
 		return nil

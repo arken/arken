@@ -29,7 +29,7 @@ func Rebalance() (err error) {
 		keySet := filepath.Base(config.Keysets[set].URL)
 
 		fmt.Printf("Calculating File Minimum Nodes Threshold for %s\n", keySet)
-		threshold, err := CalcThreshold(config.Keysets[set].LightHouseFileID, config.Keysets[set].ReplicationFactor, 5)
+		threshold, err := CalcThreshold(config.Keysets[set].LightHouseFileID, config.Keysets[set].ReplicationFactor, 20)
 		if err != nil {
 			return err
 		}

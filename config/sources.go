@@ -21,6 +21,7 @@ type KeySet struct {
 	LightHouseFileID  string
 	ReplicationFactor float32
 	Gateway           string
+	StatsURL          string
 }
 
 type sourcesFileData struct {
@@ -49,6 +50,7 @@ func readSources() {
 	}
 }
 
+// Set the default keyset for new nodes.
 func defaultSources() sourcesFileData {
 	result := sourcesFileData{
 		Sets: []string{"https://github.com/arkenproject/core-keyset"},
@@ -57,6 +59,7 @@ func defaultSources() sourcesFileData {
 	return result
 }
 
+// Create the keysets.yaml file with the default data.
 func genSources(keyset sourcesFileData) {
 	os.MkdirAll(filepath.Dir(Global.Sources.Config), os.ModePerm)
 

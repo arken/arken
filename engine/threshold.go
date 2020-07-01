@@ -20,7 +20,7 @@ func CalcThreshold(lightHouseKey string, replicationFactor float32, startNodes i
 	}
 	threshold = int(float32(maxNodes) * replicationFactor)
 	if threshold < 5 {
-		threshold = 5
+		threshold = 20
 	}
 	return threshold, nil
 }

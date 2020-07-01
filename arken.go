@@ -3,14 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
-	"github.com/arkenproject/arken/ipfs"
-
-	"github.com/arkenproject/arken/engine"
 	"github.com/arkenproject/arken/stats"
 
-	"github.com/alecthomas/units"
 	"github.com/arkenproject/arken/config"
 	"github.com/arkenproject/arken/keysets"
 )
@@ -36,35 +33,21 @@ func main() {
 
 		fmt.Println("\n[Starting Rebalancing]")
 
-		err = engine.Rebalance()
-		if err != nil {
-			log.Fatal(err)
-		}
+		// err = engine.Rebalance()
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
 
 		fmt.Println("\n[Finished Data Rebalance]")
 
-		// Generate Stats Data
-		n, err := units.ParseBase2Bytes(config.Global.General.PoolSize)
-		if err != nil {
-			log.Fatal(err)
+		// Check whether to report node stats
+		if strings.ToLower(config.Global.General.StatsReporting) == "on" {
+			// If allowed report the stats to the keyset stats server.
+			err = stats.Report(config.Keysets)
+			if err != nil {
+				log.Println(err)
+			}
 		}
-
-		total := int(n)
-
-		usage, err := ipfs.GetRepoSize()
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(usage)
-		data := stats.NodeData{
-			ID:         ipfs.GetID(),
-			Username:   config.Global.Stats.Username,
-			Email:      config.Global.Stats.Email,
-			TotalSpace: total / 1000000000,
-			UsedSpace:  usage / 1000000000,
-		}
-
-		stats.CheckIn("https://arken.io/beacon", data)
 
 		fmt.Println("\n[System Sleeping for 1 Hour]")
 

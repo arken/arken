@@ -19,9 +19,10 @@ type Config struct {
 
 // general defines the substruct about general application settings.
 type general struct {
-	Version      string
-	PoolSize     string
-	NetworkLimit string
+	Version        string
+	PoolSize       string
+	NetworkLimit   string
+	StatsReporting string
 }
 
 // database defines database specific config settings.
