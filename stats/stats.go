@@ -34,7 +34,7 @@ func Report(keysets []config.KeySet) (err error) {
 		Username:   config.Global.Stats.Username,
 		Email:      config.Global.Stats.Email,
 		TotalSpace: float64(total / 1000000000),
-		UsedSpace:  float64(usage / 1000000000),
+		UsedSpace:  float64(usage) / float64(1000000000),
 	}
 
 	for keyset := range keysets {
