@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  arken:
+    image: arkenproject/arken:latest
+    restart: always
+    volumes:
+      - </PATH/TO/MOUNTED/DRIVE/HERE>/storage:/data/storage
+      - </PATH/TO/MOUNTED/DRIVE/HERE>/database:/data/database
+      - </PATH/TO/MOUNTED/DRIVE/HERE>/repositories:/data/repositories
+      - </PATH/TO/MOUNTED/DRIVE/HERE>/config:/data/config
+    environment:
+      - ARKEN_GENERAL_POOLSIZE=<YOUR-DRIVE-SIZE>
+      - ARKEN_DB_PATH=/data/database/keys.db
+      - ARKEN_SOURCES_CONFIG=/data/config/keysets.yaml
+      - ARKEN_SOURCES_REPOSITORIES=/data/repositories
+      - ARKEN_SOURCES_STORAGE=/data/storage
+      - ARKEN_GENERAL_STATSREPORTING="on"
+    ports:
+      - 4001:4001
+  
+  watchtower:
+    image: containrrr/watchtower:latest
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
