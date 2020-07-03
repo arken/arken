@@ -55,6 +55,9 @@ On a regular interval an instance of Arken will query IPFS for the number of oth
 
 ## Getting Started
 
+#### Tutorials:
+[Getting Started with Arken on a Raspberry Pi](https://github.com/arkenproject/arken/blob/master/docs/raspberry-pi-setup.md)
+
 To start running an Arken Node you can download it as a Golang program or as a docker container. **For simplicity and easy updates it is recommended to run Arken as a docker container.** 
 
 ##### Docker:

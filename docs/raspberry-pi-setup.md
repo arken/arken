@@ -2,8 +2,6 @@
 
 (This guide is going to mainly focus on installing Arken on a Raspberry Pi running Raspbian/RaspberryPiOS)
 
-
-
 ## Install Docker
 
 1. Install docker's prerequisites
@@ -12,13 +10,13 @@
 sudo apt-get install apt-transport-https ca-certificates software-properties-common -y
 ```
 
-2.  Download & Install Docker
+2. Download & Install Docker
 
 ```bash
 curl -fsSL get.docker.com -o get-docker.sh && sh get-docker.sh
 ```
 
-3.  Set up the Apt Repository for Docker
+3. Set up the Apt Repository for Docker
 
 Add the following line to your apt configuration.
 
@@ -40,8 +38,6 @@ sudo apt update && sudo apt upgrade
 systemctl start --now docker.service
 ```
 
-
-
 ## Install Docker-Compose
 
 1. Download and install pip3
@@ -56,8 +52,6 @@ sudo apt install python3-pip
 sudo pip3 install docker-compose
 ```
 
-
-
 ## Install USBMount & Prepare External Drive
 
 1. Make a directory to use as a mount point. For this tutorial I'm going to use `/mnt/data` but you can replace that with any other path you'd like.
@@ -67,8 +61,6 @@ sudo mkdir -p /mnt/data
 ```
 
 **(If you're using the internal SD card of the Raspberry Pi you can move on to installing Arken from here.)**
-
-
 
 2. Make the mount point immutable unless a drive is mounted.
 
@@ -103,10 +95,9 @@ MOUNTPOINTS="/mnt/data"
 # Filesystem types: removable storage devices are only mounted if they
 # contain a filesystem type which is in this list.
 FILESYSTEMS="vfat ext2 ext3 ext4 hfsplus"
-
 ```
 
-4.  Reboot the system. When logging back in with a drive attached you should see it as mounted to the expected location by typing.
+4. Reboot the system. When logging back in with a drive attached you should see it as mounted to the expected location by typing.
 
 ```bash
 lsblk
@@ -145,7 +136,11 @@ wget https://raw.githubusercontent.com/arkenproject/arken/master/docs/examples/d
      
      - Use the format `1TB` or  `1GB`
    
-   - (Optional) 
+   - (Optional) Add the following line to the "environment" section under Arken. This email will only be used to send you an alert if your node doesn't check in for 24 hours or if your hard drive fails. After that alert is sent all your data will be scrubbed from our systems.
+     
+     ```yaml
+          - ARKEN_STATS_EMAIL="you@example.com"
+     ```
 
 3. Start the Arken Application!
 
@@ -161,10 +156,4 @@ sudo docker-compose logs -f arken
 
 (CTRL+C to escape.)
 
-
-
 That's it! You should now have Arken running on your Raspberry pi!
-
-
-
-
