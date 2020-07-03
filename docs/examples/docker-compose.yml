@@ -18,6 +18,8 @@ services:
       - ARKEN_GENERAL_STATSREPORTING=on
     ports:
       - 4001:4001
+    networks:
+      - default
   
   watchtower:
     image: containrrr/watchtower:latest
