@@ -40,16 +40,10 @@ systemctl start --now docker.service
 
 ## Install Docker-Compose
 
-1. Download and install pip3
+1. Download and install docker-compose
 
 ```bash
-sudo apt install python3-pip
-```
-
-2. Allow docker-compose to be executed as a program
-
-```bash
-sudo pip3 install docker-compose
+sudo apt install docker-compose
 ```
 
 ## Install USBMount & Prepare External Drive
