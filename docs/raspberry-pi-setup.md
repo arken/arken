@@ -97,7 +97,17 @@ MOUNTPOINTS="/mnt/data"
 FILESYSTEMS="vfat ext2 ext3 ext4 hfsplus"
 ```
 
-4. Reboot the system. When logging back in with a drive attached you should see it as mounted to the expected location by typing.
+5. Disable UDev Private Mount to fix Auto Mount Not Working
+
+```bash
+sudo nano /lib/systemd/system/systemd-udevd.service
+```
+
+Change `PrivateMount=yes`  --> `PrivateMount=no`
+
+
+
+6. Reboot the system. When logging back in with a drive attached you should see it as mounted to the expected location by typing.
 
 ```bash
 lsblk
