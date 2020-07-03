@@ -26,3 +26,5 @@ services:
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    envoirnment:
+      - WATCHTOWER_CLEANUP=true
