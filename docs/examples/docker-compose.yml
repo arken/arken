@@ -15,7 +15,7 @@ services:
       - ARKEN_SOURCES_CONFIG=/data/config/keysets.yaml
       - ARKEN_SOURCES_REPOSITORIES=/data/repositories
       - ARKEN_SOURCES_STORAGE=/data/storage
-      - ARKEN_GENERAL_STATSREPORTING="on"
+      - ARKEN_GENERAL_STATSREPORTING=on
     ports:
       - 4001:4001
   
