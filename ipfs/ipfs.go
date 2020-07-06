@@ -210,7 +210,7 @@ func createRepo(ctx context.Context, path string) (string, error) {
 	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
 	cfg.Reprovider.Strategy = "all"
 	cfg.Reprovider.Interval = "1h"
-	cfg.Routing.Type = "dhtserver"
+	cfg.Routing.Type = "dhtclient"
 	cfg.Swarm.EnableAutoRelay = true
 
 	// Create the repo with the config
