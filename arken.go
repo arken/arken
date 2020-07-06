@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
-	"github.com/archivalists/arken/engine"
+	"github.com/arkenproject/arken/engine"
+	"github.com/arkenproject/arken/stats"
 
-	"github.com/archivalists/arken/config"
-	"github.com/archivalists/arken/keysets"
+	"github.com/arkenproject/arken/config"
+	"github.com/arkenproject/arken/keysets"
 )
 
 func main() {
@@ -38,6 +40,15 @@ func main() {
 		}
 
 		fmt.Println("\n[Finished Data Rebalance]")
+
+		// Check whether to report node stats
+		if strings.ToLower(config.Global.General.StatsReporting) == "on" {
+			// If allowed report the stats to the keyset stats server.
+			err = stats.Report(config.Keysets)
+			if err != nil {
+				log.Println(err)
+			}
+		}
 
 		fmt.Println("\n[System Sleeping for 1 Hour]")
 

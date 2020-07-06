@@ -20,6 +20,8 @@ type KeySet struct {
 	URL               string
 	LightHouseFileID  string
 	ReplicationFactor float32
+	Gateway           string
+	StatsURL          string
 }
 
 type sourcesFileData struct {
@@ -32,6 +34,7 @@ func readSources() {
 	if os.IsNotExist(err) {
 		genSources(defaultSources())
 		readSources()
+		return
 	}
 	if err != nil && !os.IsNotExist(err) {
 		log.Fatal(err)
@@ -45,26 +48,27 @@ func readSources() {
 	for set := range internal.Sets {
 		Keysets = append(Keysets, KeySet{URL: internal.Sets[set]})
 	}
-
 }
 
+// Set the default keyset for new nodes.
 func defaultSources() sourcesFileData {
 	result := sourcesFileData{
-		Sets: []string{"https://github.com/archivalists/core-keyset-testing"},
+		Sets: []string{"https://github.com/arkenproject/core-keyset"},
 	}
 
 	return result
 }
 
+// Create the keysets.yaml file with the default data.
 func genSources(keyset sourcesFileData) {
-	os.MkdirAll(filepath.Dir(path), os.ModePerm)
+	os.MkdirAll(filepath.Dir(Global.Sources.Config), os.ModePerm)
 
 	out, err := yaml.Marshal(keyset)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = ioutil.WriteFile(filepath.Join(filepath.Dir(path), "keysets.yaml"), out, 0664)
+	err = ioutil.WriteFile(filepath.Join(filepath.Dir(Global.Sources.Config), "keysets.yaml"), out, 0664)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -2,11 +2,11 @@ package engine
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 
-	"github.com/archivalists/arken/config"
-	"github.com/archivalists/arken/database"
+	"github.com/arkenproject/arken/config"
+	"github.com/arkenproject/arken/database"
+	"github.com/arkenproject/arken/ipfs"
 )
 
 // Rebalance manages balancing new and at risk files
@@ -19,13 +19,22 @@ func Rebalance() (err error) {
 	defer db.Close()
 
 	for set := range config.Keysets {
-		keySet := filepath.Base(config.Keysets[set].URL)
-
-		fmt.Printf("Calculating File Minimum Nodes Threshold for %s\n", keySet)
-		threshold, err := CalcThreshold(config.Keysets[set].LightHouseFileID, config.Keysets[set].ReplicationFactor, 2)
+		// Pin Lighthouse File to determine the size of the active cluster.
+		fmt.Println("Pinning Lighthouse File...")
+		err = ipfs.Pin(config.Keysets[set].LightHouseFileID)
 		if err != nil {
 			return err
 		}
+
+		keySet := filepath.Base(config.Keysets[set].URL)
+
+		fmt.Printf("Calculating File Minimum Nodes Threshold for %s\n", keySet)
+		threshold, err := CalcThreshold(config.Keysets[set].LightHouseFileID, config.Keysets[set].ReplicationFactor, 20)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Calculated Threshold To Be: %d\n", threshold)
 
 		err = ScanHostReplications(db, keySet, threshold)
 		if err != nil {
@@ -34,11 +43,19 @@ func Rebalance() (err error) {
 
 		input := make(chan database.FileKey)
 		go database.GetAll(db, "atrisk", keySet, input)
+		tx, err := db.Begin()
+		if err != nil {
+			return err
+		}
 		for key := range input {
-			err := ReplicateAtRiskFile(db, key, threshold)
+			err := ReplicateAtRiskFile(tx, key, threshold)
 			if err != nil {
-				log.Println(err)
+				return err
 			}
+		}
+		err = tx.Commit()
+		if err != nil {
+			return err
 		}
 	}
 

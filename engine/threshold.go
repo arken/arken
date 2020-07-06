@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"github.com/archivalists/arken/ipfs"
+	"github.com/arkenproject/arken/ipfs"
 )
 
 // CalcThreshold calculates the AtRiskThreshold for the minimum
@@ -20,7 +20,7 @@ func CalcThreshold(lightHouseKey string, replicationFactor float32, startNodes i
 	}
 	threshold = int(float32(maxNodes) * replicationFactor)
 	if threshold < 5 {
-		threshold = 5
+		threshold = 20
 	}
 	return threshold, nil
 }

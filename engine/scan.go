@@ -7,16 +7,13 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/archivalists/arken/database"
-	"github.com/archivalists/arken/ipfs"
+	"github.com/arkenproject/arken/database"
+	"github.com/arkenproject/arken/ipfs"
 )
 
 // ScanHostReplications scans remote files from imported keysets and queries
 // the ipfs network for the number of peers hosting that file.
 func ScanHostReplications(db *sql.DB, keySet string, threshold int) (err error) {
-
-	fmt.Printf("Calculated Threshold To Be: %d\n", threshold)
-
 	input := make(chan database.FileKey)
 	atRisk := make(chan database.FileKey)
 
@@ -38,9 +35,19 @@ func ScanHostReplications(db *sql.DB, keySet string, threshold int) (err error) 
 		close(atRisk)
 	}()
 
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
 	// Update all db entires that are out-of-date.
 	for key := range atRisk {
-		database.Update(db, key)
+		database.Update(tx, key)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
 	}
 
 	return nil

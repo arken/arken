@@ -61,7 +61,6 @@ func updateTime(db *sql.DB, entry FileKey) (err error) {
 	if err != nil {
 		return err
 	}
-	defer tx.Commit()
 	stmt, err := tx.Prepare(
 		`UPDATE keys SET
 			modified = datetime('now')
@@ -72,6 +71,10 @@ func updateTime(db *sql.DB, entry FileKey) (err error) {
 	_, err = stmt.Exec(
 		entry.ID)
 
+	if err != nil {
+		return err
+	}
+	err = tx.Commit()
 	if err != nil {
 		return err
 	}
