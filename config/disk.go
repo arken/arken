@@ -12,9 +12,10 @@ import (
 type DiskInfo struct {
     AvailableBytes uint64
     PoolSizeBytes  uint64
-    isUnix         bool
 }
 
+//This interface is what makes this part of the program cross platform. The Unix
+//and windows version of DiskInfo implement this method interface.
 type DiskInfoProvider interface {
     GetDiskInfo() *DiskInfo
 }

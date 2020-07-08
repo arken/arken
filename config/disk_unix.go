@@ -7,17 +7,7 @@ import (
 	"log"
 )
 
-var GlobalDiskInfo DiskInfo
-
-type DiskInfo struct {
-	AvailableBytes uint64
-	PoolSizeBytes  uint64
-	isUnix         bool
-}
-
-//Initiates a DiskInfo struct, checking what os the program is running on and
-//then calling the appropriate syscall to get the requisite information about
-//the disk.
+//Initiates a DiskInfo with methods that make unix system calls.
 func (di* DiskInfo) Init() {
 	fs := unix.Statfs_t{}
 	err := unix.Statfs(".", &fs)
@@ -27,8 +17,7 @@ func (di* DiskInfo) Init() {
 	di.AvailableBytes = fs.Bavail * uint64(fs.Bsize)
 }
 
-//Refreshes the info with a new syscall. This is not called in GetAvailableBytes()
-//because syscalls are expensive.
+//Refreshes the info with a new syscall.
 func (di* DiskInfo) Refresh() {
 	di.Init()
 }
