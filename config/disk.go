@@ -2,16 +2,12 @@ package config
 
 import (
     "fmt"
-    "golang.org/x/sys/unix"
     "log"
     "math"
     "regexp"
-    "runtime"
     "strconv"
     "strings"
 )
-
-var GlobalDiskInfo DiskInfo
 
 type DiskInfo struct {
     AvailableBytes uint64
@@ -19,49 +15,15 @@ type DiskInfo struct {
     isUnix         bool
 }
 
-//Initiates a DiskInfo struct, checking what os the program is running on and
-//then calling the appropriate syscall to get the requisite information about
-//the disk.
-func (di* DiskInfo) Init() {
-    var unixes = []string{ "dragonfly", "freebsd", "hurd", "illumos",
-        "linux", "netbsd", "openbsd", "solaris" }
-    if runtime.GOOS == "windows" {
-        di.isUnix = false
-        //TODO: figure out what syscall to use on windows.
-    } else  {
-        for _, os := range unixes {
-            if runtime.GOOS == os {
-                di.isUnix = true
-                break
-            }
-        }
-        if di.isUnix {
-            fs := unix.Statfs_t{}
-            err := unix.Statfs(".", &fs)
-            if err != nil {
-                log.Fatal(err)
-            }
-            di.AvailableBytes = fs.Bavail * uint64(fs.Bsize)
-        } else {
-            log.Fatal("Unrecognized operating system \"" + runtime.GOOS + "\".")
-        }
-    }
+type DiskInfoProvider interface {
+    GetDiskInfo() *DiskInfo
 }
 
-//Refreshes the info with a new syscall. This is not called in GetAvailableBytes()
-//because syscalls are expensive.
-func (di* DiskInfo) Refresh() {
-    if di.isUnix {
-        fs := unix.Statfs_t{}
-        err := unix.Statfs(".", &fs)
-        if err != nil {
-            log.Fatal(err)
-        }
-        di.AvailableBytes = fs.Bavail * uint64(fs.Bsize)
-    } else {
-        //TODO: figure out what syscall to use on windows.
-    }
+func (di* DiskInfo) GetDiskInfo() *DiskInfo {
+    return di
 }
+
+var GlobalDiskInfo DiskInfo
 
 //Parses the string contained in the global config as the max pool size, and
 //stores the value it comes up with in bytes in the struct GlobalDiskInfo. If
@@ -76,12 +38,13 @@ func (di* DiskInfo) Refresh() {
 //There can be any amount of whitespace before and after either of the elements.
 //  "3000MB", "  10    GB   ", "10 GB" will all work.
 //  "010GB", "10gb", "0xfa5GB" will not work
-func ParsePoolSize(di* DiskInfo) {
+func ParsePoolSize(dip DiskInfoProvider) {
+    di := dip.GetDiskInfo()
     di.Refresh()
     max := Global.General.PoolSize
     defaultSizeB := int64(di.AvailableBytes) - 10000000000 //available - 10GB
-    defaultSizeGB := toGB(uint64(defaultSizeB)) //for use in strings
-    if defaultSizeB < 0 { //user has less than 10GB available
+    defaultSizeGB := toGB(uint64(defaultSizeB))            //for use in strings
+    if defaultSizeB < 0 {                                  //user has less than 10GB available
         log.Fatal("Not enough free storage on this device")
     }
     var poolSizeB uint64
