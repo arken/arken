@@ -10,12 +10,12 @@ import (
     "strings"
 )
 
-var diskInfo DiskInfo
+var GlobalDiskInfo DiskInfo
 
 type DiskInfo struct {
     AvailableBytes uint64
-    ArkenAllocatedBytes uint64
-    isUnix bool
+    PoolSizeBytes  uint64
+    isUnix         bool
 }
 
 //Initiates a DiskInfo struct, checking what os the program is running on and
@@ -42,12 +42,12 @@ func (di* DiskInfo) Init() {
             }
             di.AvailableBytes = fs.Bavail * uint64(fs.Bsize)
         } else {
-            panic("Unrecognized operating system \"" + runtime.GOOS + "\".")
+            log.Fatal("Unrecognized operating system \"" + runtime.GOOS + "\".")
         }
     }
 }
 
-//Refresh the info with a new syscall. This is not called in GetAvailableBytes()
+//Refreshes the info with a new syscall. This is not called in GetAvailableBytes()
 //because syscalls are expensive.
 func (di* DiskInfo) Refresh() {
     if di.isUnix {
@@ -62,13 +62,25 @@ func (di* DiskInfo) Refresh() {
     }
 }
 
-func ParseUserDiskInput(di* DiskInfo) {
+//Parses the string contained in the global config as the max pool size, and
+//stores the value it comes up with in bytes in the struct GlobalDiskInfo. If
+//for some reason the input cannot be understood or the user attempts to allocate
+//more storage than they have available, a default value of the user's capacity
+//minus 10 GB will be put in place. This means that the minimum amount of space
+//a user must have available is 10 GB.
+//The string must be in the following format and order:
+//  1. A base-10 integer that does not start with 0
+//  2. One of the following: MB, GB, TB. It's case sensitive to avoid bit/byte
+//     confusion. These are mega-, giga-, and terabytes.
+//There can be any amount of whitespace before and after either of the elements.
+//  "3000MB", "  10    GB   ", "10 GB" will all work.
+//  "010GB", "10gb", "0xfa5GB" will not work
+func ParsePoolSize(di* DiskInfo) {
     di.Refresh()
     max := Global.General.PoolSize
     defaultSizeB := int64(di.AvailableBytes) - 10000000000 //available - 10GB
     defaultSizeGB := float64(defaultSizeB) / math.Pow10(9) //for use in strings
-    //						v 1 GB v
-    if di.AvailableBytes < 1000000000 || defaultSizeB < 0 {
+    if defaultSizeB < 0 { //user has less than 10GB available
         log.Fatal("Not enough free storage on this device")
     }
     var poolSizeB uint64
@@ -100,18 +112,17 @@ func ParseUserDiskInput(di* DiskInfo) {
             "using %v GB instead\n", float64(poolSizeB) / math.Pow10(9), defaultSizeGB)
         poolSizeB = uint64(defaultSizeB)
     }
-    diskInfo.ArkenAllocatedBytes = poolSizeB
+    GlobalDiskInfo.PoolSizeBytes = poolSizeB
     log.Printf("Using %v GB of storage", float64(poolSizeB) / math.Pow10(9))
 }
 
 func parseStorageUnit(unitStr *string, num uint64) uint64 {
-    result := num
     if *unitStr == "TB" {
-        result *= uint64(math.Pow10(12))
+        num *= uint64(math.Pow10(12))
     } else if *unitStr == "GB" {
-        result *= uint64(math.Pow10(9))
+        num *= uint64(math.Pow10(9))
     } else {
-        result *= uint64(math.Pow10(6))
+        num *= uint64(math.Pow10(6))
     }
-    return result
+    return num
 }
