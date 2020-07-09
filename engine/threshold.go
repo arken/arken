@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"github.com/archivalists/arken/ipfs"
+	"github.com/arkenproject/arken/ipfs"
 )
 
 // CalcThreshold calculates the AtRiskThreshold for the minimum

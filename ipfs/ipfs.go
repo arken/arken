@@ -9,10 +9,13 @@ import (
 	"path/filepath"
 	"sync"
 
-	arkenConf "github.com/archivalists/arken/config"
+	"github.com/ipfs/go-ipfs/peering"
+
+	arkenConf "github.com/arkenproject/arken/config"
 
 	config "github.com/ipfs/go-ipfs-config"
 	libp2p "github.com/ipfs/go-ipfs/core/node/libp2p"
+	migrate "github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	icore "github.com/ipfs/interface-go-ipfs-core"
 	peerstore "github.com/libp2p/go-libp2p-peerstore"
 	ma "github.com/multiformats/go-multiaddr"
@@ -26,8 +29,10 @@ import (
 
 var (
 	ipfs   icore.CoreAPI
+	node   *core.IpfsNode
 	ctx    context.Context
 	cancel context.CancelFunc
+	ps     *peering.PeeringService
 	// AtRiskThreshhold is the number of peers for a piece
 	// of data to be backed up on to be considered safe.
 	AtRiskThreshhold int
@@ -42,6 +47,8 @@ func init() {
 		log.Fatal(err)
 	}
 
+	ps = peering.NewPeeringService(node.PeerHost)
+
 	bootstrapNodes := []string{
 		// IPFS Bootstrapper nodes.
 		"/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
@@ -52,8 +59,6 @@ func init() {
 		// IPFS Cluster Pinning nodes
 		"/ip4/138.201.67.219/tcp/4001/p2p/QmUd6zHcbkbcs7SMxwLs48qZVX3vpcM8errYS7xEczwRMA",
 		"/ip4/138.201.67.219/udp/4001/quic/p2p/QmUd6zHcbkbcs7SMxwLs48qZVX3vpcM8errYS7xEczwRMA",
-		"/ip4/138.201.67.220/tcp/4001/p2p/QmNSYxZAiJHeLdkBg38roksAR9So7Y5eojks1yjEcUtZ7i",
-		"/ip4/138.201.67.220/udp/4001/quic/p2p/QmNSYxZAiJHeLdkBg38roksAR9So7Y5eojks1yjEcUtZ7i",
 		"/ip4/138.201.68.74/tcp/4001/p2p/QmdnXwLrC8p1ueiq2Qya8joNvk3TVVDAut7PrikmZwubtR",
 		"/ip4/138.201.68.74/udp/4001/quic/p2p/QmdnXwLrC8p1ueiq2Qya8joNvk3TVVDAut7PrikmZwubtR",
 		"/ip4/94.130.135.167/tcp/4001/p2p/QmUEMvxS2e7iDrereVYc5SWPauXPyNwxcy9BXZrC1QTcHE",
@@ -64,6 +69,21 @@ func init() {
 	}
 
 	go connectToPeers(ctx, ipfs, bootstrapNodes)
+	ps.Start()
+}
+
+// GetID returns the identifier of the node.
+func GetID() (result string) {
+	return node.Identity.Pretty()
+}
+
+// GetRepoSize returns the size of the repo in bytes.
+func GetRepoSize() (result uint64, err error) {
+	out, err := node.Repo.GetStorageUsage()
+	if err != nil {
+		return result, err
+	}
+	return out, nil
 }
 
 func setupPlugins(externalPluginsPath string) error {
@@ -108,22 +128,33 @@ func createNode(ctx context.Context, repoPath string) (icore.CoreAPI, error) {
 	// Open the repo
 	repo, err := fsrepo.Open(repoPath)
 	if err != nil {
-		return nil, err
+		if err == fsrepo.ErrNeedMigration {
+			migrate.DistPath = repoPath
+			err = migrate.RunMigration(fsrepo.RepoVersion)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	// Construct the node
 
 	nodeOptions := &core.BuildCfg{
-		Online:  true,
-		Routing: libp2p.DHTOption, // This option sets the node to be a full DHT node (both fetching and storing DHT Records)
+		Permanent: true,
+		Online:    true,
+		Routing:   libp2p.DHTOption, // This option sets the node to be a full DHT node (both fetching and storing DHT Records)
 		// Routing: libp2p.DHTClientOption, // This option sets the node to be a client DHT node (only fetching records)
 		Repo: repo,
 	}
 
-	node, err := core.NewNode(ctx, nodeOptions)
+	node, err = core.NewNode(ctx, nodeOptions)
 	if err != nil {
 		return nil, err
 	}
+
+	node.IsDaemon = true
 
 	// Attach the Core API to the constructed node
 	return coreapi.NewCoreAPI(node)
@@ -175,6 +206,12 @@ func createRepo(ctx context.Context, path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
+	cfg.Reprovider.Strategy = "all"
+	cfg.Reprovider.Interval = "1h"
+	cfg.Routing.Type = "dhtserver"
+	cfg.Swarm.EnableAutoRelay = true
 
 	// Create the repo with the config
 	err = fsrepo.Init(path, cfg)

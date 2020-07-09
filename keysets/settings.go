@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/archivalists/arken/config"
+	"github.com/arkenproject/arken/ipfs"
+
+	"github.com/arkenproject/arken/config"
 
 	"github.com/BurntSushi/toml"
 )
@@ -16,5 +18,11 @@ func importKeysetSettings(keyset *config.KeySet, rootPath string) (err error) {
 		return err
 	}
 	fmt.Printf("Found Light House File: %s\n", keyset.LightHouseFileID)
+
+	err = ipfs.AddBootstrapPeer(keyset.Gateway)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

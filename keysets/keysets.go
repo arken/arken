@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/archivalists/arken/config"
+	"github.com/arkenproject/arken/config"
 
 	"github.com/go-git/go-git/v5"
 )
@@ -54,7 +54,7 @@ func LoadSets(keysets []config.KeySet) (err error) {
 			return err
 		}
 
-		err = configLighthouse(keysets[repo].LightHouseFileID)
+		err = configLighthouse(keysets[repo].LightHouseFileID, keysets[repo].URL)
 		if err != nil {
 			return err
 		}

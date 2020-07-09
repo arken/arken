@@ -14,13 +14,15 @@ type Config struct {
 	General  general
 	Database database
 	Sources  sources
+	Stats    stats
 }
 
 // general defines the substruct about general application settings.
 type general struct {
-	Version      string
-	PoolSize     string
-	NetworkLimit string
+	Version        string
+	PoolSize       string
+	NetworkLimit   string
+	StatsReporting string
 }
 
 // database defines database specific config settings.
@@ -33,6 +35,12 @@ type sources struct {
 	Config       string
 	Repositories string
 	Storage      string
+}
+
+// stats defines where to look for the stats configuration.
+type stats struct {
+	Username string
+	Email    string
 }
 
 var (
