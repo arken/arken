@@ -15,6 +15,8 @@ require (
 	github.com/libp2p/go-libp2p-peer v0.2.0
 	github.com/libp2p/go-libp2p-peerstore v0.2.6
 	github.com/mattn/go-sqlite3 v1.14.0
+	github.com/miekg/dns v1.1.30 // indirect
 	github.com/multiformats/go-multiaddr v0.2.2
+	golang.org/x/sys v0.0.0-20200413165638-669c56c373c4
 	gopkg.in/yaml.v2 v2.3.0
 )
