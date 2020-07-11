@@ -3,20 +3,19 @@
 package config
 
 import (
-	"golang.org/x/sys/windows"
 	"log"
-	"os"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
-//Initiates a DiskInfo with methods that make unix system calls.
-func (di* DiskInfo) Init() {
-	wd, _ := os.Getwd() //working directory
+// Init cretes a DiskInfo with methods that make unix system calls.
+func (di *DiskInfo) Init() {
 	h := windows.MustLoadDLL("kernel32.dll")
 	c := h.MustFindProc("GetDiskFreeSpaceExW")
 	var freeBytesAvailableToCaller uint64
 	_, _, err := c.Call(
-		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(wd))),
+		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(Global.Sources.Storage))),
 		uintptr(unsafe.Pointer(&freeBytesAvailableToCaller)),
 		uintptr(0), //don't care about this value
 		uintptr(0), //don't care about this value
@@ -31,6 +30,6 @@ func (di* DiskInfo) Init() {
 }
 
 //Refreshes the info with a new syscall.
-func (di* DiskInfo) Refresh() {
+func (di *DiskInfo) Refresh() {
 	di.Init()
 }

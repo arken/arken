@@ -5,11 +5,11 @@ import (
 	icorepath "github.com/ipfs/interface-go-ipfs-core/path"
 )
 
-// Pin a file to local storage.
-func Pin(hash string) (err error) {
+// Unpin removes a file from local storage.
+func Unpin(hash string) (err error) {
 	path := icorepath.New("/ipfs/" + hash)
 
-	err = ipfs.Pin().Add(ctx, path, func(input *options.PinAddSettings) error {
+	err = ipfs.Pin().Rm(ctx, path, func(input *options.PinRmSettings) error {
 		input.Recursive = true
 		return nil
 	})

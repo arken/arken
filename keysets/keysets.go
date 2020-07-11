@@ -63,6 +63,11 @@ func LoadSets(keysets []config.KeySet) (err error) {
 		if err != nil {
 			return err
 		}
+
+		err = garbageCollect(keysets[repo])
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
