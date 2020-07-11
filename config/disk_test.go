@@ -8,21 +8,25 @@ import (
 //this isn't so much a test as a way to execute the code I want without executing
 //the whole Arken program. Eventually will be more test-like.
 func TestParsePoolSize(t *testing.T) {
-	GlobalDiskInfo.Init()
-	ParsePoolSize(&GlobalDiskInfo)
+	var test DiskInfo
+	test.Init()
+	ParsePoolSize(&test)
 }
 
-func TestNumLen(t *testing.T) {
-	assert.Equal(t, 0, numLen(0))
-	assert.Equal(t, 2, numLen(10))
+func TestDiskInfo_PrettyPoolSize(t *testing.T) {
+	var dip DiskInfoProvider = &DiskInfo{}
+	dip.SetPoolSizeBytes(30123019213)
+	assert.Equal(t, "30.123019213GB", dip.GetPrettyPoolSize())
+	dip.SetPoolSizeBytes(1003012000000)
+	assert.Equal(t, "1.003012TB", dip.GetPrettyPoolSize())
+	dip.SetPoolSizeBytes(10000000000000)
+	assert.Equal(t,"10TB", dip.GetPrettyPoolSize())
 }
 
-func TestGetUnit(t *testing.T) {
-	assert.Equal(t, "TB", getUnit(12))
-	assert.Equal(t, "GB", getUnit(9))
-	assert.Equal(t, "MB", getUnit(6))
-	assert.Equal(t, "KB", getUnit(3))
-	assert.Equal(t, "B", getUnit(0))
-	assert.Equal(t, "", getUnit(-1))
+func TestBytesToUnitString(t *testing.T) {
+	assert.Equal(t, "10GB", BytesToUnitString(10000000000))
+	assert.Equal(t, "100GB", BytesToUnitString(100000000000))
+	assert.Equal(t, "1TB", BytesToUnitString(1000000000000))
+	assert.Equal(t, "1.231KB", BytesToUnitString(1231))
+	assert.Equal(t, "653B", BytesToUnitString(653))
 }
-
