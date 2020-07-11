@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"strings"
 )
 
 // Get searches for and returns a the coorisponding entry from the
@@ -36,38 +37,43 @@ func Get(db *sql.DB, id string) (result FileKey, err error) {
 }
 
 // GetAll opens a channel and reads each entry matching the status into the channel.
-func GetAll(db *sql.DB, status string, keySet string, output chan FileKey) {
+// The status string can be a single status or the combination of two seperated by a +.
+// For example "remote" or "local" or "remove+local"
+func GetAll(db *sql.DB, statusPattern string, keySet string, output chan FileKey) {
 	err := db.Ping()
 	if err != nil {
 		close(output)
 		log.Fatal(err)
 	}
 
-	rows, err := db.Query("SELECT * FROM keys WHERE status = ? AND keyset = ?", status, keySet)
-	if err != nil {
-		close(output)
-		log.Fatal(err)
-	}
-
-	defer rows.Close()
-
-	for rows.Next() {
-		var key FileKey
-
-		err = rows.Scan(
-			&key.ID,
-			&key.Name,
-			&key.Size,
-			&key.Status,
-			&key.KeySet,
-			&key.Modified,
-			&key.Replications)
-
+	statuses := strings.Split(statusPattern, "+")
+	for status := range statuses {
+		rows, err := db.Query("SELECT * FROM keys WHERE status = ? AND keyset = ?", statuses[status], keySet)
 		if err != nil {
 			close(output)
 			log.Fatal(err)
 		}
-		output <- key
+
+		defer rows.Close()
+
+		for rows.Next() {
+			var key FileKey
+
+			err = rows.Scan(
+				&key.ID,
+				&key.Name,
+				&key.Size,
+				&key.Status,
+				&key.KeySet,
+				&key.Modified,
+				&key.Replications)
+
+			if err != nil {
+				close(output)
+				log.Fatal(err)
+			}
+			output <- key
+		}
 	}
 
 	close(output)
