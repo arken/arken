@@ -66,7 +66,12 @@ func runWorker(wg *sync.WaitGroup, threshold int, input <-chan database.FileKey,
 	for key := range input {
 		replications, err := ipfs.FindProvs(key.ID, threshold)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+		}
+
+		size, err := ipfs.GetSize(key.ID)
+		if err != nil {
+			log.Println(err)
 		}
 
 		fmt.Printf("File: %s is backed up %d time(s) and the threshold is %d.\n", key.ID, replications, threshold)
@@ -74,6 +79,7 @@ func runWorker(wg *sync.WaitGroup, threshold int, input <-chan database.FileKey,
 		if replications < threshold {
 			key.Status = "atrisk"
 		}
+		key.Size = size
 		key.Replications = replications
 		output <- key
 	}
