@@ -59,7 +59,7 @@ func ParsePoolSize(dip DiskInfoProvider) {
 		poolSizeB = di.AvailableBytes
 		Global.General.PoolSize = fmt.Sprintf("%vB", di.AvailableBytes)
 	} else if parentRegex.MatchString(max) {
-		poolSizeB = parseWellFormedPoolSize(max)
+		poolSizeB = ParseWellFormedPoolSize(max)
 	} else { //did not match parent regex
 		log.Printf("Unable to understand \"%v\" as max pool size,"+
 			" using %v GB instead\n", max, defaultSizeGB)
@@ -83,7 +83,8 @@ There can be any amount of whitespace before and after either of the elements.
 	di.PoolSizeBytes = poolSizeB
 }
 
-func parseWellFormedPoolSize(str string) uint64 {
+// ParseWellFormedPoolSize converts a string represendation to a size of bytes.
+func ParseWellFormedPoolSize(str string) uint64 {
 	bytesStr := regexp.MustCompile("([0-9]*\\.)?([0-9]\\d*)").FindString(str) //extract the number
 	unitStr := regexp.MustCompile("[KMGT]?B").FindString(str)                 //extract the unit of storage
 	fBytes, _ := strconv.ParseFloat(bytesStr, 64)                             //convert number to uint64

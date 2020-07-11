@@ -34,19 +34,27 @@ func main() {
 
 		fmt.Println("\n[Starting Rebalancing]")
 
-		err = engine.Rebalance()
+		hit, err := engine.CheckNetUsage()
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		fmt.Println("\n[Finished Data Rebalance]")
-
-		// Check whether to report node stats
-		if strings.ToLower(config.Global.General.StatsReporting) == "on" {
-			// If allowed report the stats to the keyset stats server.
-			err = stats.Report(config.Keysets)
+		if hit {
+			fmt.Println("[Cancelling Rebalance due to Network Limit Hit]")
+		} else {
+			err = engine.Rebalance()
 			if err != nil {
-				log.Println(err)
+				log.Fatal(err)
+			}
+
+			fmt.Println("\n[Finished Data Rebalance]")
+
+			// Check whether to report node stats
+			if strings.ToLower(config.Global.General.StatsReporting) == "on" {
+				// If allowed report the stats to the keyset stats server.
+				err = stats.Report(config.Keysets)
+				if err != nil {
+					log.Println(err)
+				}
 			}
 		}
 
