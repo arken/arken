@@ -23,6 +23,9 @@ func ConsolidateEnvVars(conf *Config) {
 		} else if i == 1 {
 			iter = reflect.ValueOf(&conf.Database).Elem()
 			evPrefix = "ARKEN_DB_"
+		} else if i == 2 {
+			iter = reflect.ValueOf(&conf.Stats).Elem()
+			evPrefix = "ARKEN_STATS_"
 		} else {
 			iter = reflect.ValueOf(&conf.General).Elem()
 			evPrefix = "ARKEN_GENERAL_"

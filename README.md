@@ -1,6 +1,8 @@
 # Arken
 
-A Tool to Create a Distributed Filesystem to Securely Backup the World's Important Data.
+A Decentralized Archival Cluster Built for the World's Most Important Data.
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/arkenproject/arken)](https://goreportcard.com/report/github.com/arkenproject/arken)
 
 ## Table of Contents
 
