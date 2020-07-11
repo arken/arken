@@ -49,7 +49,7 @@ func ParsePoolSize(dip DiskInfoProvider) {
 	defaultSizeB := int64(di.AvailableBytes) - 10000000000 //available - 10GB
 	defaultSizeGB := toGB(uint64(defaultSizeB))            //for use in strings
 	if defaultSizeB < 0 {                                  //user has less than 10GB available
-		log.Fatal("Not enough free storage on this device")
+		log.Fatal("Not enough free storage on this device, 10 GB or more is required")
 	}
 	var poolSizeB uint64
 	parentRegex := regexp.MustCompile(
@@ -64,13 +64,13 @@ func ParsePoolSize(dip DiskInfoProvider) {
 		log.Printf("Unable to understand \"%v\" as max pool size,"+
 			" using %v GB instead\n", max, defaultSizeGB)
 		log.Println(`
-The string must be in the following format and order:
-  1. A base-10 number, can be floating point
-  2. One of the following: B, KB, MB, GB, or TB. It's case sensitive to avoid
+The max pool size string must be in the following format and order:
+    1. A base-10 number, can be floating point
+    2. One of the following: B, KB, MB, GB, or TB. It's case sensitive to avoid
      bit/byte confusion.
 There can be any amount of whitespace before and after either of the elements.
-  "3000MB", "  10GB   ", "10 GB", "1.75TB", ".5 TB" will all work.
-  "1.TB", "10gb", "0xfa5MB" will not work`)
+"3000MB", "  10GB   ", "10 GB", "1.75TB", ".5 TB" will all work.
+"1.TB", "10gb", "0xfa5MB" will not work`)
 		poolSizeB = uint64(defaultSizeB)
 		Global.General.PoolSize = fmt.Sprintf("%vB", defaultSizeB)
 	}
@@ -81,23 +81,29 @@ There can be any amount of whitespace before and after either of the elements.
 		Global.General.PoolSize = fmt.Sprintf("%vB", defaultSizeB)
 	}
 	di.PoolSizeBytes = poolSizeB
+	printResults(dip)
 }
 
+//parses a string that passed the regex test in ParsePoolSize(). It extracts the
+//number and unit, returning the number of bytes indicated by the string.
+//IE: parseWellFormedPoolSize("10GB") = 10,000,000,000
 func parseWellFormedPoolSize(str string) uint64 {
-	bytesStr := regexp.MustCompile("([0-9]*\\.)?([0-9]\\d*)").FindString(str) //extract the number
-	unitStr := regexp.MustCompile("[KMGT]?B").FindString(str)                 //extract the unit of storage
-	fBytes, _ := strconv.ParseFloat(bytesStr, 64)                             //convert number to uint64
+	//extract the number
+	bytesStr := regexp.MustCompile("([0-9]*\\.)?([0-9]\\d*)").FindString(str)
+	//extract the unit of storage
+	unitStr := regexp.MustCompile("[KMGT]?B").FindString(str)
+	bytesFloat, _ := strconv.ParseFloat(bytesStr, 64)
 	switch unitStr {
 	case "TB":
-		fBytes *= math.Pow10(12)
+		bytesFloat *= math.Pow10(12)
 	case "GB":
-		fBytes *= math.Pow10(9)
+		bytesFloat *= math.Pow10(9)
 	case "MB":
-		fBytes *= math.Pow10(6)
+		bytesFloat *= math.Pow10(6)
 	case "KB":
-		fBytes *= math.Pow10(3)
+		bytesFloat *= math.Pow10(3)
 	}
-	bytes := uint64(fBytes)
+	bytes := uint64(bytesFloat)
 	if bytes < 1000000000 {
 		log.Fatal("Arken requires an allocation of at least 1 GB")
 	}
@@ -108,4 +114,54 @@ func parseWellFormedPoolSize(str string) uint64 {
 //in gigabytes.
 func toGB(bytes uint64) float64 {
 	return float64(bytes) / math.Pow10(9)
+}
+
+//This function prints the final results of the parsing of the pool size. It
+//attempts to print the detected storage and storage allocated to Arken in a
+//readable unit.
+func printResults(dip DiskInfoProvider) {
+	di := dip.GetDiskInfo()
+	availPow10 := 0
+	poolPow10 := 0
+	for i := 0; i <= 12; i += 3 {
+		availLen := numLen(di.AvailableBytes / uint64(math.Pow10(i)))
+		if availLen <= 3 && availLen > 0 {
+			availPow10 = i
+		}
+		poolLen := numLen(di.PoolSizeBytes / uint64(math.Pow10(i)))
+		if poolLen <= 3 && poolLen > 0 {
+			poolPow10 = i
+		}
+	}
+	available := float64(di.AvailableBytes) / math.Pow10(availPow10)
+	pool := float64(di.PoolSizeBytes) / math.Pow10(poolPow10)
+	log.Printf("Detected about %.2f %v of storage available on this " +
+		"device, using %v %v (0x%x bytes)\n",
+		available, getUnit(availPow10), pool, getUnit(poolPow10), di.PoolSizeBytes)
+}
+
+//Returns the appropriate unit of storage for the given power of 10. B up to TB.
+func getUnit(pow10 int) string {
+	switch pow10 {
+	case 12:
+		return "TB"
+	case 9:
+		return "GB"
+	case 6:
+		return "MB"
+	case 3:
+		return "KB"
+	case 0:
+		return "B"
+	default:
+		return ""
+	}
+}
+
+//simply returns the number of digits in a given number.
+func numLen(num uint64) int {
+	if num == 0 {
+		return 0
+	}
+	return 1 + numLen(num / 10)
 }

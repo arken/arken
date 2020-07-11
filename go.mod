@@ -17,6 +17,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.0
 	github.com/miekg/dns v1.1.30 // indirect
 	github.com/multiformats/go-multiaddr v0.2.2
+	github.com/stretchr/testify v1.6.1
 	golang.org/x/sys v0.0.0-20200523222454-059865788121
 	gopkg.in/yaml.v2 v2.3.0
 )
