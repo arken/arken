@@ -37,7 +37,7 @@ func Get(db *sql.DB, id string) (result FileKey, err error) {
 }
 
 // GetAll opens a channel and reads each entry matching the status into the channel.
-// The status string can be a single status or the combination of two seperated by a +.
+// The status string can be a single status or the combination of two separated by a +.
 // For example "remote" or "local" or "remove+local"
 func GetAll(db *sql.DB, statusPattern string, keySet string, output chan FileKey) {
 	err := db.Ping()

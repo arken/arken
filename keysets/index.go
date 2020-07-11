@@ -58,5 +58,5 @@ func index(rootPath string) (err error) {
 		}
 		return nil
 	})
-	return nil
+	return err
 }

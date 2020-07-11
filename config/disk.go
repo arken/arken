@@ -61,7 +61,7 @@ func ParsePoolSize(dip DiskInfoProvider) {
 	} else if parentRegex.MatchString(max) {
 		poolSizeB = parseWellFormedPoolSize(max)
 	} else { //did not match parent regex
-		log.Printf("Unable to understand \"%v\" as max pool size," +
+		log.Printf("Unable to understand \"%v\" as max pool size,"+
 			" using %v GB instead\n", max, defaultSizeGB)
 		log.Println(`
 The string must be in the following format and order:
@@ -75,7 +75,7 @@ There can be any amount of whitespace before and after either of the elements.
 		Global.General.PoolSize = fmt.Sprintf("%vB", defaultSizeB)
 	}
 	if poolSizeB > di.AvailableBytes {
-		log.Printf("Less than the requested %v GB are free on this computer, " +
+		log.Printf("Less than the requested %v GB are free on this computer, "+
 			"using %v GB instead\n", toGB(poolSizeB), defaultSizeGB)
 		poolSizeB = uint64(defaultSizeB)
 		Global.General.PoolSize = fmt.Sprintf("%vB", defaultSizeB)
@@ -86,7 +86,7 @@ There can be any amount of whitespace before and after either of the elements.
 func parseWellFormedPoolSize(str string) uint64 {
 	bytesStr := regexp.MustCompile("([0-9]*\\.)?([0-9]\\d*)").FindString(str) //extract the number
 	unitStr := regexp.MustCompile("[KMGT]?B").FindString(str)                 //extract the unit of storage
-	fBytes, _ := strconv.ParseFloat(bytesStr,64)                           //convert number to uint64
+	fBytes, _ := strconv.ParseFloat(bytesStr, 64)                             //convert number to uint64
 	switch unitStr {
 	case "TB":
 		fBytes *= math.Pow10(12)
