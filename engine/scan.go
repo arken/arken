@@ -43,6 +43,7 @@ func ScanHostReplications(db *sql.DB, keySet string, threshold int) (err error) 
 	// Update all db entires that are out-of-date.
 	for key := range atRisk {
 		database.Update(tx, key)
+		database.TransactionCommit(tx, "added", key)
 	}
 
 	err = tx.Commit()

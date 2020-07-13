@@ -37,7 +37,16 @@ func Open(path string) (db *sql.DB, err error) {
 
 			PRIMARY KEY(id)
 		);
-			`)
+
+		CREATE TABLE IF NOT EXISTS transactions(
+			time DATETIME NOT NULL,
+			fileID TEXT NOT NULL,
+			action TEXT NOT NULL,
+			size INT,
+
+			PRIMARY KEY(time)
+		);
+	`)
 	if err != nil {
 		return db, err
 	}
