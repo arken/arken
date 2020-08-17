@@ -18,13 +18,44 @@ type DiskInfo struct {
 // DiskInfoProvider is an interface is what makes this part of the program cross
 // platform. The Unix and windows version of DiskInfo implement this method interface.
 type DiskInfoProvider interface {
-	GetDiskInfo() *DiskInfo
+	Init()
+	Refresh()
+	GetAvailableBytes() uint64
+	SetAvailableBytes(uint64)
+	GetPoolSizeBytes() uint64
+	SetPoolSizeBytes(uint64)
+	GetPrettyPoolSize() string
 }
 
 // GetDiskInfo returns the disk info struct.
 func (di *DiskInfo) GetDiskInfo() *DiskInfo {
 	return di
 }
+
+func (di *DiskInfo) GetPoolSizeBytes() uint64 {
+	return di.PoolSizeBytes
+}
+
+func (di *DiskInfo) SetPoolSizeBytes(new uint64) {
+	di.PoolSizeBytes = new
+}
+
+func (di *DiskInfo) GetAvailableBytes() uint64 {
+	return di.AvailableBytes
+}
+
+func (di *DiskInfo) SetAvailableBytes(new uint64) {
+	di.AvailableBytes = new
+}
+
+func (di *DiskInfo) GetPrettyPoolSize() string {
+	if di.PoolSizeBytes < 1000000000000 { //less than a TB
+		return fmt.Sprintf("%vGB", toUnit(di.PoolSizeBytes, 9))
+	} else { //1 TB or more
+		return fmt.Sprintf("%vTB", toUnit(di.PoolSizeBytes, 12))
+	}
+}
+
 
 // GlobalDiskInfo is the Global Configuration struct for Arken disk stats
 var GlobalDiskInfo DiskInfo
@@ -43,70 +74,108 @@ var GlobalDiskInfo DiskInfo
 //  "3000MB", "  10GB   ", "10 GB", "1.75TB", ".5 TB" will all work.
 //  "1.TB", "10gb", "0xfa5MB" will not work
 func ParsePoolSize(dip DiskInfoProvider) {
-	di := dip.GetDiskInfo()
-	di.Refresh()
+	dip.Refresh()
 	max := Global.General.PoolSize
-	defaultSizeB := int64(di.AvailableBytes) - 10000000000 //available - 10GB
-	defaultSizeGB := toGB(uint64(defaultSizeB))            //for use in strings
+	defaultSizeB := int64(dip.GetAvailableBytes()) - 10000000000 //available - 10GB
+	defaultSizeGB := toUnit(uint64(defaultSizeB), 9)        //for use in strings
 	if defaultSizeB < 0 {                                  //user has less than 10GB available
-		log.Fatal("Not enough free storage on this device")
+		log.Fatal("Not enough free storage on this device, 10GB or more is required")
 	}
-	var poolSizeB uint64
 	parentRegex := regexp.MustCompile(
 		"\\A\\s*([0-9]*\\.)?([0-9]\\d*)\\s*[KMGT]?B\\s*$",
 	)
 	if strings.EqualFold(max, "max") { //case insensitive comparison
-		poolSizeB = di.AvailableBytes
-		Global.General.PoolSize = fmt.Sprintf("%vB", di.AvailableBytes)
+		dip.SetPoolSizeBytes(dip.GetAvailableBytes())
+		Global.General.PoolSize = dip.GetPrettyPoolSize()
 	} else if parentRegex.MatchString(max) {
-		poolSizeB = ParseWellFormedPoolSize(max)
+		dip.SetPoolSizeBytes(parseWellFormedPoolSize(max))
 	} else { //did not match parent regex
 		log.Printf("Unable to understand \"%v\" as max pool size,"+
 			" using %v GB instead\n", max, defaultSizeGB)
 		log.Println(`
-The string must be in the following format and order:
-  1. A base-10 number, can be floating point
-  2. One of the following: B, KB, MB, GB, or TB. It's case sensitive to avoid
+The max pool size string must be in the following format and order:
+    1. A base-10 number, can be floating point
+    2. One of the following: B, KB, MB, GB, or TB. It's case sensitive to avoid
      bit/byte confusion.
 There can be any amount of whitespace before and after either of the elements.
-  "3000MB", "  10GB   ", "10 GB", "1.75TB", ".5 TB" will all work.
-  "1.TB", "10gb", "0xfa5MB" will not work`)
-		poolSizeB = uint64(defaultSizeB)
-		Global.General.PoolSize = fmt.Sprintf("%vB", defaultSizeB)
+"3000MB", "  10GB   ", "10 GB", "1.75TB", ".5 TB" will all work.
+"1.TB", "10gb", "0xfa5MB" will not work`)
+		dip.SetPoolSizeBytes(uint64(defaultSizeB))
+		Global.General.PoolSize = dip.GetPrettyPoolSize()
 	}
-	if poolSizeB > di.AvailableBytes {
-		log.Printf("Less than the requested %v GB are free on this computer, "+
-			"using %v GB instead\n", toGB(poolSizeB), defaultSizeGB)
-		poolSizeB = uint64(defaultSizeB)
-		Global.General.PoolSize = fmt.Sprintf("%vB", defaultSizeB)
+	if dip.GetPoolSizeBytes() > dip.GetAvailableBytes() {
+		log.Printf("Less than the requested %vGB are free on this computer, "+
+			"using %vGB instead\n", toUnit(dip.GetPoolSizeBytes(), 9), defaultSizeGB)
+		dip.SetPoolSizeBytes(uint64(defaultSizeB))
+		Global.General.PoolSize = dip.GetPrettyPoolSize()
 	}
-	di.PoolSizeBytes = poolSizeB
+	printResults(dip)
 }
 
-// ParseWellFormedPoolSize converts a string represendation to a size of bytes.
-func ParseWellFormedPoolSize(str string) uint64 {
-	bytesStr := regexp.MustCompile("([0-9]*\\.)?([0-9]\\d*)").FindString(str) //extract the number
-	unitStr := regexp.MustCompile("[KMGT]?B").FindString(str)                 //extract the unit of storage
-	fBytes, _ := strconv.ParseFloat(bytesStr, 64)                             //convert number to uint64
-	switch unitStr {
+//parses a string that passed the regex test in ParsePoolSize(). It extracts the
+//number and unit, returning the number of bytes indicated by the string.
+//IE: parseWellFormedPoolSize("10GB") = 10,000,000,000
+func parseWellFormedPoolSize(str string) uint64 {
+	//extract the number
+	bytesStr := regexp.MustCompile("([0-9]*\\.)?([0-9]\\d*)").FindString(str)
+	//extract the unit of storage
+	unitsStr := regexp.MustCompile("[KMGT]?B").FindString(str)
+	bytesFloat, _ := strconv.ParseFloat(bytesStr, 64)
+	switch unitsStr {
 	case "TB":
-		fBytes *= math.Pow10(12)
+		bytesFloat *= math.Pow10(12)
 	case "GB":
-		fBytes *= math.Pow10(9)
+		bytesFloat *= math.Pow10(9)
 	case "MB":
-		fBytes *= math.Pow10(6)
+		bytesFloat *= math.Pow10(6)
 	case "KB":
-		fBytes *= math.Pow10(3)
+		bytesFloat *= math.Pow10(3)
 	}
-	bytes := uint64(fBytes)
+	bytes := uint64(bytesFloat)
 	if bytes < 1000000000 {
-		log.Fatal("Arken requires an allocation of at least 1 GB")
+		log.Fatal("Arken requires an allocation of at least 1GB")
 	}
 	return bytes
 }
 
 //Takes in a uint64 of bytes, return a float64 representing the amount of bytes
 //in gigabytes.
-func toGB(bytes uint64) float64 {
-	return float64(bytes) / math.Pow10(9)
+func toUnit(bytes uint64, pow int) float64 {
+	return float64(bytes) / math.Pow10(pow)
 }
+
+//This function prints the final results of the parsing of the pool size. It
+//attempts to print the detected storage and storage allocated to Arken in a
+//readable unit.
+func printResults(dip DiskInfoProvider) {
+	poolStr := BytesToUnitString(dip.GetPoolSizeBytes())
+	availStr := BytesToUnitString(dip.GetAvailableBytes())
+	log.Printf("Detected %v of storage available on this " +
+		"device, using %v (0x%x bytes)\n", availStr, poolStr, dip.GetPoolSizeBytes())
+}
+
+//Given a number of bytes, Returns a string that represents the number of bytes in
+//a sensible unit.
+func BytesToUnitString(bytes uint64) string {
+	var pow int
+	var unit string
+	if bytes >= 1000000000000 {
+		pow = 12
+		unit = "TB"
+	} else if bytes >= 1000000000 {
+		pow = 9
+		unit = "GB"
+	} else if bytes >= 1000000 {
+		pow = 6
+		unit = "MB"
+	} else if bytes >= 1000 {
+		pow = 3
+		unit = "KB"
+	} else {
+		pow = 0
+		unit = "B"
+	}
+	return fmt.Sprintf("%v%v", toUnit(bytes, pow), unit)
+}
+
+//TODO write a generic UnitStringToBytes() that does the inverse of ^
