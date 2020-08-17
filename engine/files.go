@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/arkenproject/arken/config"
+
 	"github.com/arkenproject/arken/database"
 	"github.com/arkenproject/arken/ipfs"
 )
@@ -23,16 +25,30 @@ func ReplicateAtRiskFile(tx *sql.Tx, file database.FileKey, threshold int) (err 
 	prob := rand.Float32()
 
 	if prob > activationEnergy {
+		file.Size, err = ipfs.GetSize(file.ID)
+		if err != nil {
+			return err
+		}
+
+		if uint64(file.Size) >= config.Disk.GetPoolSizeBytes() {
+			return nil
+		}
+
+		// To Do: Add the logic here for removing well backed up files in favor of at risk files.
+		if uint64(file.Size) >= config.Disk.GetAvailableBytes() {
+			return nil
+		}
+
 		fmt.Printf("Pinning to Local Storage: %s\n", file.ID)
 		err = ipfs.Pin(file.ID)
 		if err != nil {
 			return err
 		}
+		database.TransactionCommit(tx, "added", file)
 		file.Status = "local"
 	} else {
 		file.Status = "remote"
 	}
 	database.Update(tx, file)
-
 	return nil
 }

@@ -4,6 +4,8 @@ package config
 
 import (
 	"log"
+	"os"
+	"path/filepath"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -11,6 +13,8 @@ import (
 
 // Init cretes a DiskInfo with methods that make unix system calls.
 func (di *DiskInfo) Init() {
+	os.MkdirAll(filepath.Dir(Global.Sources.Storage), os.ModePerm)
+
 	h := windows.MustLoadDLL("kernel32.dll")
 	c := h.MustFindProc("GetDiskFreeSpaceExW")
 	var freeBytesAvailableToCaller uint64

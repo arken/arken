@@ -38,10 +38,10 @@ func garbageCollect(keySet config.KeySet) (err error) {
 				if err != nil {
 					return err
 				}
-			}
-			err = database.TransactionCommit(tx, "removed", key)
-			if err != nil {
-				return err
+				err = database.TransactionCommit(tx, "removed", key)
+				if err != nil {
+					return err
+				}
 			}
 			fmt.Printf("Removed: %s\n", key.ID)
 		}
