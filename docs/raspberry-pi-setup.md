@@ -143,7 +143,7 @@ wget https://raw.githubusercontent.com/arkenproject/arken/master/docs/examples/d
    - (Optional) Add the following line to the "environment" section under Arken. This email will only be used to send you an alert if your node doesn't check in for 24 hours or if your hard drive fails. After that alert is sent all your data will be scrubbed from our systems.
      
      ```yaml
-          - ARKEN_STATS_EMAIL="you@example.com"
+          - ARKEN_STATS_EMAIL=you@example.com
      ```
 
 3. Start the Arken Application!
