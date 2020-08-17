@@ -32,30 +32,33 @@ func (di *DiskInfo) GetDiskInfo() *DiskInfo {
 	return di
 }
 
+// GetPoolSizeBytes returns the size of the storage pool.
 func (di *DiskInfo) GetPoolSizeBytes() uint64 {
 	return di.PoolSizeBytes
 }
 
+// SetPoolSizeBytes sets the size of the storage pool.
 func (di *DiskInfo) SetPoolSizeBytes(new uint64) {
 	di.PoolSizeBytes = new
 }
 
+// GetAvailableBytes gets the number of bytes still free on the drive.
 func (di *DiskInfo) GetAvailableBytes() uint64 {
 	return di.AvailableBytes
 }
 
+// SetAvailableBytes sets the number of free bytes on the drive.
 func (di *DiskInfo) SetAvailableBytes(new uint64) {
 	di.AvailableBytes = new
 }
 
+// GetPrettyPoolSize outputs a pretty string of the pool size.
 func (di *DiskInfo) GetPrettyPoolSize() string {
 	if di.PoolSizeBytes < 1000000000000 { //less than a TB
 		return fmt.Sprintf("%vGB", toUnit(di.PoolSizeBytes, 9))
-	} else { //1 TB or more
-		return fmt.Sprintf("%vTB", toUnit(di.PoolSizeBytes, 12))
 	}
+	return fmt.Sprintf("%vTB", toUnit(di.PoolSizeBytes, 12))
 }
-
 
 // GlobalDiskInfo is the Global Configuration struct for Arken disk stats
 var GlobalDiskInfo DiskInfo
@@ -77,8 +80,8 @@ func ParsePoolSize(dip DiskInfoProvider) {
 	dip.Refresh()
 	max := Global.General.PoolSize
 	defaultSizeB := int64(dip.GetAvailableBytes()) - 10000000000 //available - 10GB
-	defaultSizeGB := toUnit(uint64(defaultSizeB), 9)        //for use in strings
-	if defaultSizeB < 0 {                                  //user has less than 10GB available
+	defaultSizeGB := toUnit(uint64(defaultSizeB), 9)             //for use in strings
+	if defaultSizeB < 0 {                                        //user has less than 10GB available
 		log.Fatal("Not enough free storage on this device, 10GB or more is required")
 	}
 	parentRegex := regexp.MustCompile(
@@ -88,7 +91,7 @@ func ParsePoolSize(dip DiskInfoProvider) {
 		dip.SetPoolSizeBytes(dip.GetAvailableBytes())
 		Global.General.PoolSize = dip.GetPrettyPoolSize()
 	} else if parentRegex.MatchString(max) {
-		dip.SetPoolSizeBytes(parseWellFormedPoolSize(max))
+		dip.SetPoolSizeBytes(ParseWellFormedPoolSize(max))
 	} else { //did not match parent regex
 		log.Printf("Unable to understand \"%v\" as max pool size,"+
 			" using %v GB instead\n", max, defaultSizeGB)
@@ -112,10 +115,10 @@ There can be any amount of whitespace before and after either of the elements.
 	printResults(dip)
 }
 
-//parses a string that passed the regex test in ParsePoolSize(). It extracts the
-//number and unit, returning the number of bytes indicated by the string.
-//IE: parseWellFormedPoolSize("10GB") = 10,000,000,000
-func parseWellFormedPoolSize(str string) uint64 {
+// ParseWellFormedPoolSize parses a string that passed the regex test in ParsePoolSize(). It extracts the
+// number and unit, returning the number of bytes indicated by the string.
+// IE: parseWellFormedPoolSize("10GB") = 10,000,000,000
+func ParseWellFormedPoolSize(str string) uint64 {
 	//extract the number
 	bytesStr := regexp.MustCompile("([0-9]*\\.)?([0-9]\\d*)").FindString(str)
 	//extract the unit of storage
@@ -150,12 +153,12 @@ func toUnit(bytes uint64, pow int) float64 {
 func printResults(dip DiskInfoProvider) {
 	poolStr := BytesToUnitString(dip.GetPoolSizeBytes())
 	availStr := BytesToUnitString(dip.GetAvailableBytes())
-	log.Printf("Detected %v of storage available on this " +
+	log.Printf("Detected %v of storage available on this "+
 		"device, using %v (0x%x bytes)\n", availStr, poolStr, dip.GetPoolSizeBytes())
 }
 
-//Given a number of bytes, Returns a string that represents the number of bytes in
-//a sensible unit.
+// BytesToUnitString Given a number of bytes, Returns a string that represents the number of bytes in
+// a sensible unit.
 func BytesToUnitString(bytes uint64) string {
 	var pow int
 	var unit string

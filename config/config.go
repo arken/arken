@@ -46,7 +46,9 @@ type stats struct {
 var (
 	// Global is the configuration struct for the application.
 	Global Config
-	path   string
+	// Disk is the configuration interface for the disk utilities.
+	Disk DiskInfo
+	path string
 )
 
 // initialize the app config system. If a config doesn't exist, create one.
@@ -68,6 +70,14 @@ func init() {
 	}
 	ConsolidateEnvVars(&Global)
 	readSources()
+	loadDiskConfig()
+}
+
+// Load the Disk Configuration
+func loadDiskConfig() {
+	Disk.Init()
+
+	Global.General.PoolSize = Disk.GetPrettyPoolSize()
 }
 
 // Read the config or create a new one if it doesn't exist.
