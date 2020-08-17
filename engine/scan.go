@@ -76,7 +76,9 @@ func runWorker(wg *sync.WaitGroup, threshold int, input <-chan database.FileKey,
 
 		fmt.Printf("File: %s is backed up %d time(s) and the threshold is %d.\n", key.ID, replications, threshold)
 
-		if replications < threshold {
+		// Determine an at risk file.
+		// Node: if a file is hosted 0 times don't try to pin it.
+		if replications < threshold && replications >= 1 {
 			key.Status = "atrisk"
 		}
 		key.Size = size

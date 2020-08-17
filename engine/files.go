@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math/rand"
+	"time"
 
 	"github.com/arkenproject/arken/config"
 
@@ -17,11 +18,9 @@ This function will also run the El Farol Mathematics Problem to determine the
 probability that this node should grab the file
 */
 func ReplicateAtRiskFile(tx *sql.Tx, file database.FileKey, threshold int) (err error) {
-	replications, err := ipfs.FindProvs(file.ID, threshold)
-	if err != nil {
-		return err
-	}
-	activationEnergy := float32(replications) / float32(threshold)
+	time.Sleep(1 * time.Second)
+
+	activationEnergy := float32(file.Replications) / float32(threshold)
 	prob := rand.Float32()
 
 	if prob > activationEnergy {
@@ -30,12 +29,21 @@ func ReplicateAtRiskFile(tx *sql.Tx, file database.FileKey, threshold int) (err 
 			return err
 		}
 
-		if uint64(file.Size) >= config.Disk.GetPoolSizeBytes() {
+		// If the file is bigger than the entire pool size then don't try to pin it.
+		poolSize := config.ParseWellFormedPoolSize(config.Global.General.PoolSize)
+		if err != nil {
+			return err
+		}
+		if uint64(file.Size) >= poolSize {
 			return nil
 		}
 
-		// To Do: Add the logic here for removing well backed up files in favor of at risk files.
-		if uint64(file.Size) >= config.Disk.GetAvailableBytes() {
+		// To Do: Add the logic here for removing "well backed" up files in favor of "at risk" files.
+		repoSize, err := ipfs.GetRepoSize()
+		if err != nil {
+			return err
+		}
+		if uint64(file.Size) >= poolSize-repoSize {
 			return nil
 		}
 

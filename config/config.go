@@ -70,13 +70,11 @@ func init() {
 	}
 	ConsolidateEnvVars(&Global)
 	readSources()
-	loadDiskConfig()
 }
 
-// Load the Disk Configuration
-func loadDiskConfig() {
-	Disk.Init()
-
+// LoadDiskConfig loads the Disk Configuration
+func LoadDiskConfig() {
+	ParsePoolSize(&Disk)
 	Global.General.PoolSize = Disk.GetPrettyPoolSize()
 }
 
