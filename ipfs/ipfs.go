@@ -114,6 +114,7 @@ func spawnNode(ctx context.Context, path string) (icore.CoreAPI, error) {
 
 	ipfs, err := createNode(ctx, path)
 	if err != nil {
+		arkenConf.LoadDiskConfig()
 		path, err = createRepo(ctx, path)
 		if err != nil {
 			return nil, err
