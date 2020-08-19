@@ -57,6 +57,16 @@ func makeSpace(bytes int64) (removedBytes int64, err error) {
 
 			// Update value in database.
 			entry.Status = "remote"
+
+			// Check size for legazy code
+			if entry.Size <= 0 {
+				size, err := ipfs.GetSize(entry.ID)
+				if err != nil {
+					return -1, err
+				}
+				entry.Size = size
+			}
+
 			database.Update(tx, entry)
 
 			// Record file operation/transaction
