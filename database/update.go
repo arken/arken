@@ -10,7 +10,8 @@ func Update(tx *sql.Tx, key FileKey) {
 	stmt, err := tx.Prepare(
 		`UPDATE keys SET
 			Status = ?,
-			Replications = ?
+			Replications = ?,
+			Size = ?
 			WHERE id = ?;`)
 	if err != nil {
 		log.Fatal(err)
@@ -18,6 +19,7 @@ func Update(tx *sql.Tx, key FileKey) {
 	_, err = stmt.Exec(
 		key.Status,
 		key.Replications,
+		key.Size,
 		key.ID)
 
 	if err != nil {
