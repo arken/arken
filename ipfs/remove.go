@@ -1,11 +1,9 @@
 package ipfs
 
 import (
-	"context"
-	"fmt"
 	"strings"
 
-	"github.com/ipfs/go-ipfs/gc"
+	"github.com/ipfs/go-ipfs/core/corerepo"
 	"github.com/ipfs/interface-go-ipfs-core/options"
 	icorepath "github.com/ipfs/interface-go-ipfs-core/path"
 )
@@ -21,12 +19,9 @@ func Unpin(hash string) (err error) {
 	if err != nil && !strings.HasPrefix(err.Error(), "not pinned") {
 		return err
 	}
-	var gcout <-chan gc.Result
-	go func() {
-		gcout = gc.GC(context.Background(), node.Blockstore, node.Repo.Datastore(), node.Pinning, nil)
-	}()
-	for cid := range gcout {
-		fmt.Printf("Garbage Collected: %s\n", cid)
+	err = corerepo.GarbageCollect(node, ctx)
+	if err != nil {
+		return err
 	}
 	return nil
 }
