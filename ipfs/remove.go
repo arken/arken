@@ -1,6 +1,8 @@
 package ipfs
 
 import (
+	"strings"
+
 	"github.com/ipfs/interface-go-ipfs-core/options"
 	icorepath "github.com/ipfs/interface-go-ipfs-core/path"
 )
@@ -13,5 +15,11 @@ func Unpin(hash string) (err error) {
 		input.Recursive = true
 		return nil
 	})
-	return err
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "not pinned") {
+			return nil
+		}
+		return err
+	}
+	return nil
 }
