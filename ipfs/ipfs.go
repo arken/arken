@@ -47,6 +47,12 @@ func init() {
 		log.Fatal(err)
 	}
 
+	cfg, err := node.Repo.Config()
+	if err != nil {
+		log.Fatal(err)
+	}
+	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
+
 	ps = peering.NewPeeringService(node.PeerHost)
 
 	bootstrapNodes := []string{
@@ -114,7 +120,6 @@ func spawnNode(ctx context.Context, path string) (icore.CoreAPI, error) {
 
 	ipfs, err := createNode(ctx, path)
 	if err != nil {
-		arkenConf.LoadDiskConfig()
 		path, err = createRepo(ctx, path)
 		if err != nil {
 			return nil, err
@@ -141,7 +146,6 @@ func createNode(ctx context.Context, repoPath string) (icore.CoreAPI, error) {
 	}
 
 	// Construct the node
-
 	nodeOptions := &core.BuildCfg{
 		Permanent: true,
 		Online:    true,
@@ -207,6 +211,9 @@ func createRepo(ctx context.Context, path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// Check free space available on disk to verify repository size.
+	arkenConf.LoadDiskConfig()
 
 	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
 	cfg.Reprovider.Strategy = "all"

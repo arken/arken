@@ -44,7 +44,13 @@ func ReplicateAtRiskFile(tx *sql.Tx, file database.FileKey, threshold int) (err 
 			return err
 		}
 		if uint64(file.Size) >= poolSize-repoSize {
-			return nil
+			bytes, err := makeSpace(int64(file.Size))
+			if err != nil {
+				return err
+			}
+			if bytes < int64(file.Size) {
+				return nil
+			}
 		}
 
 		fmt.Printf("Pinning to Local Storage: %s\n", file.ID)
