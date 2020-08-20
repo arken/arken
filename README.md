@@ -107,17 +107,16 @@ go run arken
 
 Let's say that you are a scholar who wants to preserve some important works of humanity, or a researcher who wants 
 to back up the DNA of an extinct animal/plant. How would you go about adding your data to the distributed file system? 
-First, you would load the Arken Import Tool, and point it at the directory of important data. The tool will create 
+First, you would download & run the [Arken Import Tool](https://github.com/arkenproject/ait). Using the Arken Import tool you can create 
 a Keyset file of the IPFS identifiers for your data. At this point you can either upload the Keyset to your own Git 
 repository (this is best if you want to run your own pool of workers) or make an application to put your data in the
-core Keyset repository. This core Keyset repository will consist of extremely important data to preserve and is what the 
-community donating their extra disk space will use by default.
+Core Keyset repository. The Core Keyset repository consists of extremely important data to preserve and is what the 
+community donating their extra disk space uses by default.
 
 ### What's the process as someone donating their extra storage space?
 
-Old computers or servers with some empty storage space make excellent Arken nodes. After installing the 
-Arken program, you'll be asked how much storage space and network bandwidth you're willing to donate to the community 
-pool. The core Keyset will be available by default, but because Keysets are just Git repositories, you can add and use 
+Old computers or servers with some empty storage space make excellent Arken nodes. Check out our guide for configuring a Raspberry Pi with Docker and External Storage Arken [here](https://github.com/arkenproject/arken/blob/master/docs/raspberry-pi-setup.md). After installing the 
+Arken program, you can configure it either through environment variables or the Arken configuration file located at `~/.arken/`. You can check out an example of an Arken Docker-Compose file [here](https://github.com/arkenproject/arken/blob/master/docs/examples/docker-compose.yml). The core Keyset will be available by default, but because Keysets are just Git repositories, you can add and use 
 any Keyset you'd like. For example, you can donate space to the core community pool but also sync a custom Keyset of 
 some vacation pictures amongst yours and a few friends' machines.
 
