@@ -41,8 +41,8 @@ func index(rootPath string) (err error) {
 				fmt.Printf("Parsed: %s\n", data)
 				// Add parsed file to database.
 				err = database.Add(db, database.FileKey{
-					ID:     data[1],
-					Name:   data[0],
+					ID:     data[0],
+					Name:   data[1],
 					Size:   -1,
 					Status: "remote",
 					KeySet: filepath.Base(rootPath)})
