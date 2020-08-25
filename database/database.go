@@ -20,7 +20,7 @@ type FileKey struct {
 
 // Open opens the Arken SQLite database or creates one if one is not found.
 func Open(path string) (db *sql.DB, err error) {
-	db, err = sql.Open("sqlite3", path)
+	db, err = sql.Open("sqlite3", path+"?cache=shared&mode=memory")
 	if err != nil {
 		return db, err
 	}
