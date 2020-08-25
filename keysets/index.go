@@ -21,6 +21,11 @@ func index(rootPath string) (err error) {
 	// Wait to close the database until all files have been indexed.
 	defer db.Close()
 
+	fileTemplate := database.FileKey{
+		Size:   -1,
+		Status: "remote",
+		KeySet: filepath.Base(rootPath)}
+
 	// Walk through entire repository directory structure to look for .ks files.
 	err = filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
 		// On each interation of the "walk" this function will check if a keyset
@@ -39,13 +44,13 @@ func index(rootPath string) (err error) {
 				// Split data on white space.
 				data := strings.Fields(scanner.Text())
 				fmt.Printf("Parsed: %s\n", data)
+
+				// Set custom file values.
+				fileTemplate.ID = data[0]
+				fileTemplate.Name = data[1]
+
 				// Add parsed file to database.
-				err = database.Add(db, database.FileKey{
-					ID:     data[0],
-					Name:   data[1],
-					Size:   -1,
-					Status: "remote",
-					KeySet: filepath.Base(rootPath)})
+				err = database.Add(db, fileTemplate)
 				if err != nil {
 					return err
 				}
