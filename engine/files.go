@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"math/rand"
-	"time"
 
 	"github.com/arkenproject/arken/config"
 
@@ -18,8 +17,6 @@ This function will also run the El Farol Mathematics Problem to determine the
 probability that this node should grab the file
 */
 func ReplicateAtRiskFile(tx *sql.Tx, file database.FileKey, threshold int) (err error) {
-	time.Sleep(1 * time.Second)
-
 	activationEnergy := float32(file.Replications) / float32(threshold)
 	prob := rand.Float32()
 

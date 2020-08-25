@@ -10,10 +10,6 @@ import (
 // Get searches for and returns a the coorisponding entry from the
 // database if the entry exists.
 func Get(db *sql.DB, id string) (result FileKey, err error) {
-	err = db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	}
 	row, err := db.Query("SELECT * FROM keys WHERE id = ?", id)
 	if err != nil {
 		log.Fatal(err)

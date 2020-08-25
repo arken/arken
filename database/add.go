@@ -14,18 +14,17 @@ func Add(db *sql.DB, input FileKey) (err error) {
 		} else {
 			return err
 		}
+	} else {
+		err = updateTime(db, input)
+		if err != nil {
+			return err
+		}
 	}
-	updateTime(db, input)
 	return nil
 }
 
 // Insert adds a Keyset file entry to the database.
 func Insert(db *sql.DB, entry FileKey) {
-	// Ping to check that database connection still exists.
-	err := db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	}
 	stmt, err := db.Prepare(
 		`INSERT INTO keys(
 			id,
@@ -53,15 +52,7 @@ func Insert(db *sql.DB, entry FileKey) {
 }
 
 func updateTime(db *sql.DB, entry FileKey) (err error) {
-	err = db.Ping()
-	if err != nil {
-		return err
-	}
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	stmt, err := tx.Prepare(
+	stmt, err := db.Prepare(
 		`UPDATE keys SET
 			modified = datetime('now')
 			WHERE id = ?;`)
@@ -71,12 +62,5 @@ func updateTime(db *sql.DB, entry FileKey) (err error) {
 	_, err = stmt.Exec(
 		entry.ID)
 
-	if err != nil {
-		return err
-	}
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
