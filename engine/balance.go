@@ -20,7 +20,7 @@ func makeSpace(bytes int64) (removedBytes int64, err error) {
 	thresholds := make(map[string]int)
 	for _, keyset := range config.Keysets {
 		name := strings.Split(filepath.Base(keyset.URL), ".")[0]
-		hold, err := CalcThreshold(keyset.LightHouseFileID, keyset.ReplicationFactor, 20)
+		hold, err := CalcThreshold(keyset.LightHouseFileID, keyset.Replications, 20)
 		if err != nil {
 			return -1, err
 		}
