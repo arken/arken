@@ -24,6 +24,21 @@ func main() {
 	fmt.Printf("Application Version %s\n\n", config.Global.General.Version)
 
 	fmt.Println("Arken is now in [System Startup]")
+
+	// Check whether to report node stats
+	if strings.ToLower(config.Global.General.StatsReporting) == "on" {
+		go func() {
+			for {
+				// If allowed report the stats to the keyset stats server.
+				err := stats.Report(config.Keysets)
+				if err != nil {
+					log.Println(err)
+				}
+				time.Sleep(1 * time.Hour)
+			}
+		}()
+	}
+
 	for {
 		fmt.Println("\n[Indexing & Updating Keysets]")
 
@@ -33,11 +48,11 @@ func main() {
 		}
 
 		fmt.Println("\n[Starting Rebalancing]")
-
 		hit, err := engine.CheckNetUsage()
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		if hit {
 			fmt.Println("[Cancelling Rebalance due to Network Limit Hit]")
 		} else {
@@ -47,17 +62,7 @@ func main() {
 			}
 
 			fmt.Println("\n[Finished Data Rebalance]")
-
-			// Check whether to report node stats
-			if strings.ToLower(config.Global.General.StatsReporting) == "on" {
-				// If allowed report the stats to the keyset stats server.
-				err = stats.Report(config.Keysets)
-				if err != nil {
-					log.Println(err)
-				}
-			}
 		}
-
 		fmt.Println("\n[System Sleeping for 1 Hour]")
 
 		time.Sleep(1 * time.Hour)

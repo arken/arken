@@ -11,9 +11,9 @@ import (
 	"github.com/arkenproject/arken/ipfs"
 )
 
-// ScanHostReplications scans remote files from imported keysets and queries
+// ScanReplications scans remote files from imported keysets and queries
 // the ipfs network for the number of peers hosting that file.
-func ScanHostReplications(db *sql.DB, keySet string, threshold int) (err error) {
+func ScanReplications(read *sql.DB, write *sql.DB, keySet string, threshold int) (err error) {
 	input := make(chan database.FileKey)
 	atRisk := make(chan database.FileKey)
 
@@ -24,7 +24,7 @@ func ScanHostReplications(db *sql.DB, keySet string, threshold int) (err error) 
 	wg.Add(workers)
 
 	// Get all will read db entries and put in queue for workers.
-	go database.GetAll(db, "remote", keySet, input)
+	go database.GetAll(read, "remote", keySet, input)
 	for i := 0; i < workers; i++ {
 		go runWorker(&wg, threshold, input, atRisk)
 	}
@@ -35,21 +35,24 @@ func ScanHostReplications(db *sql.DB, keySet string, threshold int) (err error) 
 		close(atRisk)
 	}()
 
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-
 	// Update all db entires that are out-of-date.
 	for key := range atRisk {
-		database.Update(tx, key)
-	}
+		if key.Status == "local" {
+			tx, err := write.Begin()
+			if err != nil {
+				return err
+			}
 
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
+			database.Update(tx, key)
+			database.TransactionCommit(tx, "added", key)
 
+			err = tx.Commit()
+			if err != nil {
+				return err
+			}
+
+		}
+	}
 	return nil
 }
 
@@ -57,7 +60,7 @@ func ScanHostReplications(db *sql.DB, keySet string, threshold int) (err error) 
 // Subtract 2 from the number of cores because of the main thread and the GetAll function.
 func genNumWorkers() int {
 	if runtime.NumCPU() > 2 {
-		return runtime.NumCPU() - 2
+		return runtime.NumCPU() - 1
 	}
 	return 1
 }
@@ -74,7 +77,10 @@ func runWorker(wg *sync.WaitGroup, threshold int, input <-chan database.FileKey,
 		// Determine an at risk file.
 		// Node: if a file is hosted 0 times don't try to pin it.
 		if replications < threshold && replications >= 1 {
-			key.Status = "atrisk"
+			key, err = ReplicateAtRiskFile(key, threshold)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 		key.Replications = replications
 		output <- key
