@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"time"
 
-	"github.com/alecthomas/units"
 	"github.com/arkenproject/arken/config"
 	"github.com/arkenproject/arken/ipfs"
 )
@@ -17,10 +17,7 @@ import (
 func Report(keysets []config.KeySet) (err error) {
 	// Generate Stats Data
 	// Parse allotted total amount of storage into bytes.
-	total, err := units.ParseStrictBytes(config.Global.General.PoolSize)
-	if err != nil {
-		return err
-	}
+	total := config.ParseWellFormedPoolSize(config.Global.General.PoolSize)
 
 	// Get the current size of the repo from IPFS in unsigned bytes
 	usage, err := ipfs.GetRepoSize()
@@ -33,11 +30,14 @@ func Report(keysets []config.KeySet) (err error) {
 		ID:         ipfs.GetID(),
 		Username:   config.Global.Stats.Username,
 		Email:      config.Global.Stats.Email,
-		TotalSpace: float64(total / 1000000000),
+		TotalSpace: float64(total) / float64(1000000000),
 		UsedSpace:  float64(usage) / float64(1000000000),
 	}
 
 	for keyset := range keysets {
+		for keysets[keyset].LightHouseFileID == "" {
+			time.Sleep(30 * time.Second)
+		}
 		if keysets[keyset].StatsURL != "" {
 			fmt.Printf("[Sending Stats Info for: %s]\n", filepath.Base(keysets[keyset].URL))
 			err := CheckIn(keysets[keyset].StatsURL, data)
@@ -46,7 +46,5 @@ func Report(keysets []config.KeySet) (err error) {
 			}
 		}
 	}
-
-	fmt.Println(data)
 	return nil
 }
