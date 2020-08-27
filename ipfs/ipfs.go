@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/ipfs/go-ipfs/peering"
 
@@ -76,6 +77,12 @@ func init() {
 
 	go connectToPeers(ctx, ipfs, bootstrapNodes)
 	ps.Start()
+
+	// Run Reprovider Every Hour
+	go func() {
+		node.Provider.Run()
+		time.Sleep(1 * time.Hour)
+	}()
 }
 
 // GetID returns the identifier of the node.
