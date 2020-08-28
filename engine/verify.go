@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/arkenproject/arken/ipfs"
 
@@ -17,11 +18,16 @@ import (
 func VerifyLocal() {
 	dbFile, err := os.Open(config.Global.Database.Path)
 	if err != nil {
+		// In the case the database doesn't exist yet.
+		// Skip verify till next run.
+		if strings.HasSuffix(err.Error(), "no such file or directory") {
+			return
+		}
 		log.Fatal(err)
 	}
 
 	// Copy Database because we can't guarentee this won't run as something is added.
-	copyName := filepath.Join(filepath.Dir(config.Global.Database.Path), "verifyF.db")
+	copyName := filepath.Join(filepath.Dir(config.Global.Database.Path), "verify.db")
 	copyFile, err := os.Create(copyName)
 	if err != nil {
 		log.Fatal(err)
