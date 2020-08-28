@@ -48,7 +48,7 @@ func VerifyLocal() {
 
 	// Iterate through all local pins to verify pinned status.
 	for entry := range input {
-		_, err = ipfs.GetSize(entry.ID)
+		err = ipfs.Pin(entry.ID)
 		if err != nil {
 			log.Fatal(err)
 		}
