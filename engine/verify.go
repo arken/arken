@@ -21,7 +21,7 @@ func VerifyLocal() {
 	}
 
 	// Copy Database because we can't guarentee this won't run as something is added.
-	copyName := filepath.Join(filepath.Dir(config.Global.Database.Path), "copy.db")
+	copyName := filepath.Join(filepath.Dir(config.Global.Database.Path), "verifyF.db")
 	copyFile, err := os.Create(copyName)
 	if err != nil {
 		log.Fatal(err)
