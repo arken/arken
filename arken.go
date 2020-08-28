@@ -39,6 +39,14 @@ func main() {
 		}()
 	}
 
+	// Verify Locally Pinned Files and Re-Pin if lost.
+	go func() {
+		for {
+			engine.VerifyLocal()
+			time.Sleep(1 * time.Hour)
+		}
+	}()
+
 	for {
 		fmt.Println("\n[Indexing & Updating Keysets]")
 
