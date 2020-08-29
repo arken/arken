@@ -17,5 +17,5 @@ func CheckNetUsage() (hit bool, err error) {
 	if err != nil {
 		return true, err
 	}
-	return uint64(sum) > config.ParseWellFormedPoolSize(config.Global.General.NetworkLimit), err
+	return sum > config.ParseWellFormedPoolSize(config.Global.General.NetworkLimit), err
 }

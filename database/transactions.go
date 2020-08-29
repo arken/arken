@@ -33,26 +33,26 @@ func TransactionCommit(tx *sql.Tx, action string, file FileKey) (err error) {
 }
 
 // TransactionSum returns the sum of all of the transactions for the last month.
-func TransactionSum(db *sql.DB, action string) (sum int, err error) {
+func TransactionSum(db *sql.DB, action string) (sum uint64, err error) {
 	// Ping to check that database connection still exists.
 	err = db.Ping()
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 	// Get total pool size from sum of nodes reported values.
 	row, err := db.Query("SELECT SUM(size) FROM transactions WHERE action = ? AND time > ?",
 		action,
 		(time.Now()).AddDate(0, -1, 0))
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 	defer row.Close()
 	if !row.Next() {
-		return -1, errors.New("sum not found")
+		return 0, errors.New("sum not found")
 	}
 	err = row.Scan(&sum)
 	if err != nil && !strings.HasSuffix(err.Error(), "converting NULL to int is unsupported") {
-		return -1, err
+		return 0, err
 	}
 	return sum, nil
 }
