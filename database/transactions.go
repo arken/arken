@@ -51,7 +51,7 @@ func TransactionSum(db *sql.DB, action string) (sum uint64, err error) {
 		return 0, errors.New("sum not found")
 	}
 	err = row.Scan(&sum)
-	if err != nil && !strings.HasSuffix(err.Error(), "converting NULL to int is unsupported") {
+	if err != nil && !strings.HasSuffix(err.Error(), "converting NULL to uint64 is unsupported") {
 		return 0, err
 	}
 	return sum, nil
