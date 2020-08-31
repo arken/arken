@@ -16,10 +16,11 @@ func defaultConf() Config {
 			// Configuration version number. If a field is added or changed
 			// in this default, the version must be changed to tell the app
 			// to rebuild the users config files.
-			Version:        "0.0.1",
+			Version:        "0.1.0",
 			PoolSize:       "50 GB",
 			NetworkLimit:   "50 GB",
 			StatsReporting: "OFF",
+			IpfsUseRelay:   false,
 		},
 		Database: database{
 			// This is the path to the backend database.

@@ -205,7 +205,9 @@ func createRepo(ctx context.Context, path string) (string, error) {
 	cfg.Reprovider.Strategy = "all"
 	cfg.Reprovider.Interval = "1h"
 	cfg.Routing.Type = "dhtserver"
-	cfg.Swarm.EnableAutoRelay = true
+	if arkenConf.Global.General.IpfsUseRelay {
+		cfg.Swarm.EnableAutoRelay = true
+	}
 
 	// Create the repo with the config
 	err = fsrepo.Init(path, cfg)

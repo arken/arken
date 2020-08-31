@@ -23,6 +23,7 @@ type general struct {
 	PoolSize       string
 	NetworkLimit   string
 	StatsReporting string
+	IpfsUseRelay   bool
 }
 
 // database defines database specific config settings.
