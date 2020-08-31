@@ -44,6 +44,7 @@ func LoadSets(keysets []config.KeySet) (err error) {
 				if err != nil {
 					return err
 				}
+				continue
 			} else if err != nil && err.Error() == "non-fast-forward update" {
 				os.RemoveAll(location)
 				return err
