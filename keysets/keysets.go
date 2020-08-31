@@ -2,6 +2,7 @@ package keysets
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/arkenproject/arken/config"
@@ -43,9 +44,10 @@ func LoadSets(keysets []config.KeySet) (err error) {
 				if err != nil {
 					return err
 				}
-				continue
-			}
-			if err != nil {
+			} else if err != nil && err.Error() == "non-fast-forward update" {
+				os.RemoveAll(location)
+				return err
+			} else if err != nil {
 				return err
 			}
 		}
