@@ -86,7 +86,6 @@ func init() {
 				return
 			}
 		}
-		fmt.Println("Using Relay")
 		cfg.Swarm.EnableAutoRelay = true
 	}()
 
