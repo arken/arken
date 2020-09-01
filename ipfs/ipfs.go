@@ -7,7 +7,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/ipfs/go-ipfs/peering"
 
@@ -62,6 +64,37 @@ func init() {
 
 	go connectToPeers(ctx, ipfs, bootstrapNodes)
 	ps.Start()
+
+	// Check if node is publicly reachable and if not use relay
+	go func() {
+		time.Sleep(30 * time.Second)
+		ips := []string{"/ip4/10.", "/ip4/192.", "/ip4/127.", "/ip4/172.", "/ip6/"}
+
+		multi, err := ipfs.Swarm().LocalAddrs(ctx)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for i := range multi {
+			addr := multi[i].String()
+			private := false
+			for j := range ips {
+				if strings.HasPrefix(addr, ips[j]) {
+					private = true
+				}
+			}
+			if !private {
+				return
+			}
+		}
+		fmt.Println("Using Relay")
+		cfg.Swarm.EnableAutoRelay = true
+	}()
+
+	// Run Reprovider Every Hour
+	go func() {
+		node.Provider.Run()
+		time.Sleep(1 * time.Hour)
+	}()
 }
 
 // GetID returns the identifier of the node.
@@ -205,9 +238,6 @@ func createRepo(ctx context.Context, path string) (string, error) {
 	cfg.Reprovider.Strategy = "all"
 	cfg.Reprovider.Interval = "1h"
 	cfg.Routing.Type = "dhtserver"
-	if arkenConf.Global.General.IpfsUseRelay {
-		cfg.Swarm.EnableAutoRelay = true
-	}
 
 	// Create the repo with the config
 	err = fsrepo.Init(path, cfg)

@@ -20,7 +20,6 @@ func defaultConf() Config {
 			PoolSize:       "50 GB",
 			NetworkLimit:   "50 GB",
 			StatsReporting: "OFF",
-			IpfsUseRelay:   false,
 		},
 		Database: database{
 			// This is the path to the backend database.
