@@ -83,9 +83,11 @@ func init() {
 				}
 			}
 			if !private {
+				fmt.Printf("[Config Change: Public IP Found: %s]\n", addr)
 				return
 			}
 		}
+		fmt.Println("[Config Change: Using IPFS Relay System]")
 		cfg.Swarm.EnableAutoRelay = true
 	}()
 
