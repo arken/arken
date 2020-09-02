@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/arkenproject/arken/engine"
+	"github.com/arkenproject/arken/ipfs"
 	"github.com/arkenproject/arken/stats"
 
 	"github.com/arkenproject/arken/config"
@@ -24,6 +25,7 @@ func main() {
 	fmt.Printf("Application Version %s\n\n", config.Global.General.Version)
 
 	fmt.Println("Arken is now in [System Startup]")
+	ipfs.Init()
 
 	// Check whether to report node stats
 	if strings.ToLower(config.Global.General.StatsReporting) == "on" {

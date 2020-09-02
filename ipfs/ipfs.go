@@ -16,6 +16,7 @@ import (
 	arkenConf "github.com/arkenproject/arken/config"
 
 	config "github.com/ipfs/go-ipfs-config"
+	serialize "github.com/ipfs/go-ipfs-config/serialize"
 	libp2p "github.com/ipfs/go-ipfs/core/node/libp2p"
 	migrate "github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	icore "github.com/ipfs/interface-go-ipfs-core"
@@ -40,11 +41,12 @@ var (
 	AtRiskThreshhold int
 )
 
-func init() {
+// Init starts the IPFS subsystem.
+func Init() {
 	var err error
 	ctx, cancel = context.WithCancel(context.Background())
 
-	ipfs, err = spawnNode(ctx, arkenConf.Global.Sources.Storage)
+	ctx, ipfs, err = spawnNode(arkenConf.Global.Sources.Storage)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -65,37 +67,100 @@ func init() {
 	go connectToPeers(ctx, ipfs, bootstrapNodes)
 	ps.Start()
 
-	// Check if node is publicly reachable and if not use relay
-	go func() {
-		time.Sleep(30 * time.Second)
-		ips := []string{"/ip4/10.", "/ip4/192.", "/ip4/127.", "/ip4/172.", "/ip6/"}
-
-		multi, err := ipfs.Swarm().LocalAddrs(ctx)
-		if err != nil {
-			log.Fatal(err)
-		}
-		for i := range multi {
-			addr := multi[i].String()
-			private := false
-			for j := range ips {
-				if strings.HasPrefix(addr, ips[j]) {
-					private = true
-				}
-			}
-			if !private {
-				fmt.Printf("[Config Change: Public IP Found: %s]\n", addr)
-				return
-			}
-		}
-		fmt.Println("[Config Change: Using IPFS Relay System]")
-		cfg.Swarm.EnableAutoRelay = true
-	}()
-
 	// Run Reprovider Every Hour
 	go func() {
 		node.Provider.Run()
 		time.Sleep(1 * time.Hour)
 	}()
+}
+
+// SpawnNode creates and tests and IPFS node for public reachability.
+func spawnNode(path string) (ctx context.Context, api icore.CoreAPI, err error) {
+	// Create IPFS node
+	ctx, cancel = context.WithCancel(context.Background())
+
+	fmt.Printf("[Creating embedded IPFS Node]\n\n")
+	err = setAutoRelay(false, path)
+	if err != nil {
+		return ctx, api, err
+	}
+	api, err = setupNode(ctx, path)
+	if err != nil {
+		return ctx, api, err
+	}
+
+	// Wait 30s before testing reachability
+	fmt.Printf("[Checking Node Reachability on Arken Network]\n\n")
+	time.Sleep(30 * time.Second)
+	public, err := checkReachability(api)
+	if err != nil {
+		return ctx, api, err
+	}
+	// If the node isn't publicly reachable switch to relay system.
+	if !public {
+		cancel()
+		fmt.Printf("[Node unable to be reached by network.]\n\n")
+		fmt.Printf("[Recreating using Circut Relay System.]\n\n")
+
+		setAutoRelay(true, path)
+
+		// Wait for port to free
+		time.Sleep(30 * time.Second)
+
+		// Recreate IPFS Node
+		ctx, cancel = context.WithCancel(context.Background())
+		api, err = createNode(ctx, path)
+		if err != nil {
+			return ctx, api, err
+		}
+		fmt.Printf("[Node Re-Created Sucessfully]\n\n")
+	} else {
+		fmt.Printf("[Arken Node is Publicly Reachable with NAT]\n\n")
+	}
+	return ctx, api, nil
+}
+
+func setAutoRelay(relay bool, path string) (err error) {
+	cfg, err := fsrepo.ConfigAt(path)
+	if err != nil {
+		return err
+	}
+	cfg.Swarm.EnableAutoRelay = relay
+	configFilename, err := config.Filename(path)
+	if err != nil {
+		return err
+	}
+	if err := serialize.WriteConfigFile(configFilename, cfg); err != nil {
+		return err
+	}
+	return nil
+}
+
+// checkReachability tests if the IPFS node is reachable by the network
+// and opts to use a relay if it is not.
+func checkReachability(api icore.CoreAPI) (public bool, err error) {
+	ips := []string{"/ip4/10.", "/ip4/192.", "/ip4/127.", "/ip4/172.", "/ip6/"}
+
+	multi, err := api.Swarm().LocalAddrs(ctx)
+	if err != nil {
+		return false, err
+	}
+	for addrNum := range multi {
+		addr := multi[addrNum].String()
+		private := false
+
+		for ipNum := range ips {
+			if strings.HasPrefix(addr, ips[ipNum]) {
+				private = true
+			}
+		}
+		if !private {
+			// Public Address Found. Return that node is reachable.
+			return true, nil
+		}
+	}
+	// No public IPs were found. Return that node is NOT reachable.
+	return false, nil
 }
 
 // GetID returns the identifier of the node.
@@ -132,7 +197,7 @@ func setupPlugins(externalPluginsPath string) error {
 }
 
 // Spawns an IPFS node creating the config/storage repository if it doesn't already exist.
-func spawnNode(ctx context.Context, path string) (icore.CoreAPI, error) {
+func setupNode(ctx context.Context, path string) (icore.CoreAPI, error) {
 
 	if err := setupPlugins(path); err != nil {
 		return nil, err
