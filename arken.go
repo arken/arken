@@ -2,16 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strings"
-	"time"
 
-	"github.com/arkenproject/arken/engine"
+	"github.com/arkenproject/arken/tasks"
+
 	"github.com/arkenproject/arken/ipfs"
-	"github.com/arkenproject/arken/stats"
 
 	"github.com/arkenproject/arken/config"
-	"github.com/arkenproject/arken/keysets"
 )
 
 func main() {
@@ -27,54 +24,14 @@ func main() {
 	fmt.Println("Arken is now in [System Startup]")
 	ipfs.Init()
 
-	// Check whether to report node stats
+	// Launch Stats Reporting if enabled in the config.
 	if strings.ToLower(config.Global.General.StatsReporting) == "on" {
-		go func() {
-			for {
-				// If allowed report the stats to the keyset stats server.
-				err := stats.Report(config.Keysets)
-				if err != nil {
-					log.Println(err)
-				}
-				time.Sleep(1 * time.Hour)
-			}
-		}()
+		go tasks.StatsReporting()
 	}
 
 	// Verify Locally Pinned Files and Re-Pin if lost.
-	go func() {
-		for {
-			engine.VerifyLocal()
-			time.Sleep(1 * time.Hour)
-		}
-	}()
+	go tasks.VerifyLocal()
 
-	for {
-		fmt.Println("\n[Indexing & Updating Keysets]")
-
-		err := keysets.LoadSets(config.Keysets)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Println("\n[Starting Rebalancing]")
-		hit, err := engine.CheckNetUsage()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if hit {
-			fmt.Println("[Cancelling Rebalance due to Network Limit Hit]")
-		} else {
-			err = engine.Rebalance()
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			fmt.Println("\n[Finished Data Rebalance]")
-		}
-		fmt.Println("\n[System Sleeping for 1 Hour]")
-
-		time.Sleep(1 * time.Hour)
-	}
+	// Begin the main Arken process.
+	tasks.Main()
 }

@@ -15,7 +15,7 @@ func Add(db *sql.DB, input FileKey) (err error) {
 			return err
 		}
 	} else {
-		err = updateTime(db, input)
+		err = UpdateTime(db, input)
 		if err != nil {
 			return err
 		}
@@ -51,7 +51,8 @@ func Insert(db *sql.DB, entry FileKey) {
 	}
 }
 
-func updateTime(db *sql.DB, entry FileKey) (err error) {
+// UpdateTime sets the last seen time of a file to now in the database.
+func UpdateTime(db *sql.DB, entry FileKey) (err error) {
 	stmt, err := db.Prepare(
 		`UPDATE keys SET
 			modified = datetime('now')
