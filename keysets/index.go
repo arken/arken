@@ -13,9 +13,39 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 )
 
+// Index extracts the file identifiers from the keyset provided.
+func Index(path string, new chan database.FileKey, output chan database.FileKey) (err error) {
+	r, err := git.PlainOpen(path)
+	if err != nil {
+		return err
+	}
+	ref, err := r.Head()
+	if err != nil {
+		return err
+	}
+	if config.Global.General.IndexHash == "" {
+		err = indexFull(path, new, output)
+		if err != nil {
+			return err
+		}
+	} else {
+		if ref.Hash().String() != config.Global.General.IndexHash {
+			hash := plumbing.NewHash(config.Global.General.IndexHash)
+			err = indexPatch(path, hash, new, output)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	config.Global.General.IndexHash = ref.Hash().String()
+	config.GenConf(config.Global)
+
+	return nil
+}
+
 // IndexFull walks through the repository structure and extracts file identifiers from found
 // .ks files.
-func IndexFull(rootPath string, new chan database.FileKey, output chan database.FileKey) (err error) {
+func indexFull(rootPath string, new chan database.FileKey, output chan database.FileKey) (err error) {
 	copyName := filepath.Join(filepath.Dir(config.Global.Database.Path), "index.db")
 	err = database.Copy(config.Global.Database.Path, copyName)
 	defer os.Remove(copyName)
@@ -75,7 +105,7 @@ func IndexFull(rootPath string, new chan database.FileKey, output chan database.
 	return err
 }
 
-func indexPatch(path string, commitHash plumbing.Hash) (err error) {
+func indexPatch(path string, commitHash plumbing.Hash, new chan<- database.FileKey, output chan<- database.FileKey) (err error) {
 	r, err := git.PlainOpen(path)
 	if err != nil {
 		return err
@@ -111,16 +141,20 @@ func indexPatch(path string, commitHash plumbing.Hash) (err error) {
 			fmt.Printf("Added: %s\n", data)
 
 			// Set custom file values.
-			fileTemplate.ID = data[0]
+			fileTemplate.ID = strings.TrimPrefix(data[0], "+")
 			fileTemplate.Name = data[1]
+			output <- fileTemplate
+			new <- fileTemplate
 		}
 		if strings.HasPrefix(lines[i], "-Qm") {
 			data := strings.Fields(lines[i])
 			fmt.Printf("Removed: %s\n", data)
 
 			// Set custom file values.
-			fileTemplate.ID = data[0]
+			fileTemplate.ID = strings.TrimPrefix(data[0], "-")
 			fileTemplate.Name = data[1]
+			fileTemplate.Status = "removed"
+			output <- fileTemplate
 		}
 
 	}

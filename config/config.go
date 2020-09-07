@@ -23,6 +23,7 @@ type general struct {
 	PoolSize       string
 	NetworkLimit   string
 	StatsReporting string
+	IndexHash      string
 }
 
 // database defines database specific config settings.
@@ -82,7 +83,7 @@ func LoadDiskConfig() {
 func readConf(conf *Config) {
 	_, err := toml.DecodeFile(path, &conf)
 	if os.IsNotExist(err) {
-		genConf(defaultConf())
+		GenConf(defaultConf())
 		readConf(conf)
 	}
 	if err != nil && !os.IsNotExist(err) {

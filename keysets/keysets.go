@@ -53,7 +53,6 @@ func LoadSets(keysets []config.KeySet) (err error) {
 		if err != nil {
 			return err
 		}
-		keysets[repo].Index = true
 	}
 	return nil
 }

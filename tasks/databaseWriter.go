@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/arkenproject/arken/database"
+	"github.com/arkenproject/arken/ipfs"
 )
 
 func databaseWriter(db *sql.DB, input chan database.FileKey) {
@@ -30,15 +31,25 @@ func databaseWriter(db *sql.DB, input chan database.FileKey) {
 			log.Fatal(err)
 		}
 
+		if prev.Status == "removed" {
+			if entry.Status == "local" {
+				ipfs.Unpin(entry.ID)
+				database.TransactionCommit(db, "removed", entry)
+			}
+			database.Delete(db, entry.ID)
+		}
+
 		if entry.Status == "remote" {
 			database.UpdateTime(db, entry)
 			continue
 		}
 
 		if entry.Status == "removed" {
-			database.Delete(db, entry.ID)
 			if prev.Status == "local" {
+				database.Delete(db, entry.ID)
 				database.TransactionCommit(db, "removed", entry)
+			} else {
+				database.Update(db, entry)
 			}
 			continue
 		}

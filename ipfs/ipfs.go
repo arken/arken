@@ -88,10 +88,6 @@ func spawnNode(path string) (ctx context.Context, api icore.CoreAPI, err error) 
 	if err != nil {
 		return ctx, api, err
 	}
-	err = setAutoRelay(false, path)
-	if err != nil {
-		return ctx, api, err
-	}
 
 	// Wait 30s before testing reachability
 	fmt.Printf("\n[Checking Node Reachability on Arken Network]\n")
@@ -104,7 +100,7 @@ func spawnNode(path string) (ctx context.Context, api icore.CoreAPI, err error) 
 	if !public {
 		cancel()
 		fmt.Printf("\n[Node unable to be reached by network.]\n")
-		fmt.Printf("\n[Recreating using Circut Relay System.]\n")
+		fmt.Printf("[Recreating using Circut Relay System.]\n")
 
 		setAutoRelay(true, path)
 
@@ -117,7 +113,7 @@ func spawnNode(path string) (ctx context.Context, api icore.CoreAPI, err error) 
 		if err != nil {
 			return ctx, api, err
 		}
-		fmt.Printf("\n[Node Re-Created Sucessfully]\n")
+		fmt.Printf("[Node Re-Created Sucessfully]\n")
 	} else {
 		fmt.Printf("\n[Arken Node is Publicly Reachable with NAT]\n")
 	}

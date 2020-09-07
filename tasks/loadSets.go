@@ -29,17 +29,8 @@ func loadSets(keySets []config.KeySet, new chan database.FileKey, output chan da
 			}
 			output <- lighthouse
 
-			if !keySets[keySet].Index {
-				continue
-			}
 			fmt.Printf("Indexing: %s\n", filepath.Base(keySets[keySet].URL))
-			err = keysets.IndexFull(location, new, output)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			time.Sleep(30 * time.Second)
-			err = keysets.GarbageCollect(keySets[keySet], output)
+			err = keysets.Index(location, new, output)
 			if err != nil {
 				log.Fatal(err)
 			}
