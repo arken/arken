@@ -9,9 +9,9 @@ import (
 )
 
 // TransactionCommit adds a transaction to the database table.
-func TransactionCommit(tx *sql.Tx, action string, file FileKey) (err error) {
+func TransactionCommit(db *sql.DB, action string, file FileKey) (err error) {
 	time.Sleep(1 * time.Second)
-	stmt, err := tx.Prepare(
+	stmt, err := db.Prepare(
 		`INSERT INTO transactions(
 			time,
 			fileID,

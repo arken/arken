@@ -22,6 +22,7 @@ type KeySet struct {
 	Replications     int
 	Gateway          string
 	StatsURL         string
+	Index            bool
 }
 
 type sourcesFileData struct {

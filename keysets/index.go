@@ -9,16 +9,21 @@ import (
 
 	"github.com/arkenproject/arken/config"
 	"github.com/arkenproject/arken/database"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 )
 
-// index walks through the repository structure and extracts file identifiers from found
+// IndexFull walks through the repository structure and extracts file identifiers from found
 // .ks files.
-func index(rootPath string) (err error) {
-	db, err := database.Open(config.Global.Database.Path)
+func IndexFull(rootPath string, new chan database.FileKey, output chan database.FileKey) (err error) {
+	copyName := filepath.Join(filepath.Dir(config.Global.Database.Path), "index.db")
+	err = database.Copy(config.Global.Database.Path, copyName)
+	defer os.Remove(copyName)
+
+	db, err := database.Open(copyName)
 	if err != nil {
 		return err
 	}
-	// Wait to close the database until all files have been indexed.
 	defer db.Close()
 
 	fileTemplate := database.FileKey{
@@ -49,11 +54,15 @@ func index(rootPath string) (err error) {
 				fileTemplate.ID = data[0]
 				fileTemplate.Name = data[1]
 
-				// Add parsed file to database.
-				err = database.Add(db, fileTemplate)
-				if err != nil {
-					return err
+				entry, err := database.Get(db, data[0])
+				if err != nil && err.Error() == "entry not found" {
+					// Send parsed file to engine.
+					output <- fileTemplate
+					new <- fileTemplate
+				} else if err == nil {
+					output <- entry
 				}
+
 			}
 			if err := scanner.Err(); err != nil {
 				return err
@@ -64,4 +73,56 @@ func index(rootPath string) (err error) {
 		return nil
 	})
 	return err
+}
+
+func indexPatch(path string, commitHash plumbing.Hash) (err error) {
+	r, err := git.PlainOpen(path)
+	if err != nil {
+		return err
+	}
+	ref, err := r.Head()
+	if err != nil {
+		return err
+	}
+	commit, err := r.CommitObject(ref.Hash())
+	if err != nil {
+		return err
+	}
+
+	parent, err := r.CommitObject(commitHash)
+	if err != nil {
+		return err
+	}
+
+	diff, err := parent.Patch(commit)
+	if err != nil {
+		return err
+	}
+
+	fileTemplate := database.FileKey{
+		Size:   -1,
+		Status: "remote",
+		KeySet: filepath.Base(path)}
+
+	lines := strings.Split(diff.String(), "\n")
+	for i := range lines {
+		if strings.HasPrefix(lines[i], "+Qm") {
+			data := strings.Fields(lines[i])
+			fmt.Printf("Added: %s\n", data)
+
+			// Set custom file values.
+			fileTemplate.ID = data[0]
+			fileTemplate.Name = data[1]
+		}
+		if strings.HasPrefix(lines[i], "-Qm") {
+			data := strings.Fields(lines[i])
+			fmt.Printf("Removed: %s\n", data)
+
+			// Set custom file values.
+			fileTemplate.ID = data[0]
+			fileTemplate.Name = data[1]
+		}
+
+	}
+	return nil
 }

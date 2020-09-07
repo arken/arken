@@ -79,18 +79,22 @@ func spawnNode(path string) (ctx context.Context, api icore.CoreAPI, err error) 
 	// Create IPFS node
 	ctx, cancel = context.WithCancel(context.Background())
 
-	fmt.Printf("[Creating embedded IPFS Node]\n\n")
+	fmt.Printf("\n[Creating embedded IPFS Node]\n")
 	err = setAutoRelay(false, path)
-	if err != nil {
+	if err != nil && err.Error() != "ipfs not initialized, please run 'ipfs init'" {
 		return ctx, api, err
 	}
 	api, err = setupNode(ctx, path)
 	if err != nil {
 		return ctx, api, err
 	}
+	err = setAutoRelay(false, path)
+	if err != nil {
+		return ctx, api, err
+	}
 
 	// Wait 30s before testing reachability
-	fmt.Printf("[Checking Node Reachability on Arken Network]\n\n")
+	fmt.Printf("\n[Checking Node Reachability on Arken Network]\n")
 	time.Sleep(30 * time.Second)
 	public, err := checkReachability(api)
 	if err != nil {
@@ -99,8 +103,8 @@ func spawnNode(path string) (ctx context.Context, api icore.CoreAPI, err error) 
 	// If the node isn't publicly reachable switch to relay system.
 	if !public {
 		cancel()
-		fmt.Printf("[Node unable to be reached by network.]\n\n")
-		fmt.Printf("[Recreating using Circut Relay System.]\n\n")
+		fmt.Printf("\n[Node unable to be reached by network.]\n")
+		fmt.Printf("\n[Recreating using Circut Relay System.]\n")
 
 		setAutoRelay(true, path)
 
@@ -113,9 +117,9 @@ func spawnNode(path string) (ctx context.Context, api icore.CoreAPI, err error) 
 		if err != nil {
 			return ctx, api, err
 		}
-		fmt.Printf("[Node Re-Created Sucessfully]\n\n")
+		fmt.Printf("\n[Node Re-Created Sucessfully]\n")
 	} else {
-		fmt.Printf("[Arken Node is Publicly Reachable with NAT]\n\n")
+		fmt.Printf("\n[Arken Node is Publicly Reachable with NAT]\n")
 	}
 	return ctx, api, nil
 }

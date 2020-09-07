@@ -15,11 +15,12 @@ ReplicateAtRiskFile will pin a file in danger of being lost to local storage.
 This function will also run the El Farol Mathematics Problem to determine the
 probability that this node should grab the file
 */
-func ReplicateAtRiskFile(file database.FileKey, threshold int) (output database.FileKey, err error) {
-	activationEnergy := float32(file.Replications) / float32(threshold)
+func ReplicateAtRiskFile(file database.FileKey, keysets map[string]int, write chan<- database.FileKey) (output database.FileKey, err error) {
+	activationEnergy := float32(file.Replications) / float32(keysets[file.KeySet])
 	prob := rand.Float32()
 
 	if prob > activationEnergy {
+		fmt.Printf("Pinning to Local Storage: %s\n", file.ID)
 		file.Size, err = ipfs.GetSize(file.ID)
 		if err != nil {
 			return file, err
@@ -34,13 +35,12 @@ func ReplicateAtRiskFile(file database.FileKey, threshold int) (output database.
 			return file, err
 		}
 
-		// To Do: Add the logic here for removing "well backed" up files in favor of "at risk" files.
 		repoSize, err := ipfs.GetRepoSize()
 		if err != nil {
 			return file, err
 		}
 		if uint64(file.Size) >= poolSize-repoSize {
-			bytes, err := makeSpace(int64(file.Size))
+			bytes, err := makeSpace(int64(file.Size), keysets, write)
 			if err != nil {
 				return file, err
 			}
@@ -49,7 +49,6 @@ func ReplicateAtRiskFile(file database.FileKey, threshold int) (output database.
 			}
 		}
 
-		fmt.Printf("Pinning to Local Storage: %s\n", file.ID)
 		err = ipfs.Pin(file.ID)
 		if err != nil {
 			return file, err

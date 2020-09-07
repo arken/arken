@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/BurntSushi/toml v0.3.1
+	github.com/go-git/go-git v4.7.0+incompatible
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/ipfs/go-cid v0.0.7
 	github.com/ipfs/go-ipfs v0.6.0
@@ -19,5 +20,6 @@ require (
 	github.com/multiformats/go-multiaddr v0.3.1
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/sys v0.0.0-20200523222454-059865788121
+	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )
