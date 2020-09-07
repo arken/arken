@@ -23,7 +23,7 @@ func databaseReader(output chan database.FileKey) {
 		}
 
 		relay := make(chan database.FileKey, 10)
-		database.GetAll(db, "remote", "", relay)
+		go database.GetAll(db, "remote", "", relay)
 
 		for entry := range relay {
 			output <- entry
