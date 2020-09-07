@@ -33,7 +33,10 @@ func databaseWriter(db *sql.DB, input chan database.FileKey) {
 
 		if prev.Status == "removed" {
 			if entry.Status == "local" {
-				ipfs.Unpin(entry.ID)
+				err = ipfs.Unpin(entry.ID)
+				if err != nil {
+					log.Fatal(err)
+				}
 				database.TransactionCommit(db, "removed", entry)
 			}
 			database.Delete(db, entry.ID)
@@ -46,6 +49,10 @@ func databaseWriter(db *sql.DB, input chan database.FileKey) {
 
 		if entry.Status == "removed" {
 			if prev.Status == "local" {
+				err = ipfs.Unpin(entry.ID)
+				if err != nil {
+					log.Fatal(err)
+				}
 				database.Delete(db, entry.ID)
 				database.TransactionCommit(db, "removed", entry)
 			} else {
