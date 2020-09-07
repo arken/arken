@@ -6,8 +6,8 @@ import (
 )
 
 // Update changes a file's status in the database.
-func Update(tx *sql.Tx, key FileKey) {
-	stmt, err := tx.Prepare(
+func Update(db *sql.DB, key FileKey) {
+	stmt, err := db.Prepare(
 		`UPDATE keys SET
 			Status = ?,
 			Replications = ?,

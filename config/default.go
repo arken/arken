@@ -16,10 +16,11 @@ func defaultConf() Config {
 			// Configuration version number. If a field is added or changed
 			// in this default, the version must be changed to tell the app
 			// to rebuild the users config files.
-			Version:        "0.0.1",
+			Version:        "0.2.1",
 			PoolSize:       "50 GB",
 			NetworkLimit:   "50 GB",
 			StatsReporting: "OFF",
+			IndexHash:      "",
 		},
 		Database: database{
 			// This is the path to the backend database.
@@ -40,8 +41,8 @@ func defaultConf() Config {
 	return result
 }
 
-// genConf encodes the values of the Config stuct back into a TOML file.
-func genConf(conf Config) {
+// GenConf encodes the values of the Config stuct back into a TOML file.
+func GenConf(conf Config) {
 	os.MkdirAll(filepath.Dir(path), os.ModePerm)
 	buf := new(bytes.Buffer)
 	err := toml.NewEncoder(buf).Encode(conf)
@@ -62,5 +63,5 @@ func reloadConf() {
 	result := defaultConf()
 	readConf(&result)
 	result.General.Version = defaultConf().General.Version
-	genConf(result)
+	GenConf(result)
 }

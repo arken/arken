@@ -1,11 +1,9 @@
 package engine
 
 import (
-	"io"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/arkenproject/arken/ipfs"
 
@@ -16,30 +14,9 @@ import (
 // VerifyLocal verifies to ipfs that the local files are still
 // locally pinned to the system.
 func VerifyLocal() {
-	dbFile, err := os.Open(config.Global.Database.Path)
-	if err != nil {
-		// In the case the database doesn't exist yet.
-		// Skip verify till next run.
-		if strings.HasSuffix(err.Error(), "no such file or directory") {
-			return
-		}
-		log.Fatal(err)
-	}
-
 	// Copy Database because we can't guarentee this won't run as something is added.
 	copyName := filepath.Join(filepath.Dir(config.Global.Database.Path), "verify.db")
-	copyFile, err := os.Create(copyName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove(copyName)
-
-	_, err = io.Copy(copyFile, dbFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	copyFile.Close()
-	dbFile.Close()
+	database.Copy(config.Global.Database.Path, copyName)
 
 	// Open Copy Database
 	read, err := database.Open(copyName)
@@ -59,4 +36,5 @@ func VerifyLocal() {
 			log.Fatal(err)
 		}
 	}
+	os.Remove(copyName)
 }

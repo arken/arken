@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	arkenConf "github.com/arkenproject/arken/config"
 
 	config "github.com/ipfs/go-ipfs-config"
+	serialize "github.com/ipfs/go-ipfs-config/serialize"
 	libp2p "github.com/ipfs/go-ipfs/core/node/libp2p"
 	migrate "github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	icore "github.com/ipfs/interface-go-ipfs-core"
@@ -39,11 +41,12 @@ var (
 	AtRiskThreshhold int
 )
 
-func init() {
+// Init starts the IPFS subsystem.
+func Init() {
 	var err error
 	ctx, cancel = context.WithCancel(context.Background())
 
-	ipfs, err = spawnNode(ctx, arkenConf.Global.Sources.Storage)
+	ctx, ipfs, err = spawnNode(arkenConf.Global.Sources.Storage)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,20 +60,6 @@ func init() {
 	ps = peering.NewPeeringService(node.PeerHost)
 
 	bootstrapNodes := []string{
-		// IPFS Bootstrapper nodes.
-		"/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-		"/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-		"/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
-		"/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
-
-		// IPFS Cluster Pinning nodes
-		"/ip4/138.201.67.219/tcp/4001/p2p/QmUd6zHcbkbcs7SMxwLs48qZVX3vpcM8errYS7xEczwRMA",
-		"/ip4/138.201.67.219/udp/4001/quic/p2p/QmUd6zHcbkbcs7SMxwLs48qZVX3vpcM8errYS7xEczwRMA",
-		"/ip4/138.201.68.74/tcp/4001/p2p/QmdnXwLrC8p1ueiq2Qya8joNvk3TVVDAut7PrikmZwubtR",
-		"/ip4/138.201.68.74/udp/4001/quic/p2p/QmdnXwLrC8p1ueiq2Qya8joNvk3TVVDAut7PrikmZwubtR",
-		"/ip4/94.130.135.167/tcp/4001/p2p/QmUEMvxS2e7iDrereVYc5SWPauXPyNwxcy9BXZrC1QTcHE",
-		"/ip4/94.130.135.167/udp/4001/quic/p2p/QmUEMvxS2e7iDrereVYc5SWPauXPyNwxcy9BXZrC1QTcHE",
-
 		// Arken Bootstrapper node.
 		"/dns4/link.arken.io/tcp/4001/ipfs/QmP8krSfWWHLNL2eah6E1hr6TzoaGMEVRw2Fooy5og1Wpj",
 	}
@@ -83,6 +72,95 @@ func init() {
 		node.Provider.Run()
 		time.Sleep(1 * time.Hour)
 	}()
+}
+
+// SpawnNode creates and tests and IPFS node for public reachability.
+func spawnNode(path string) (ctx context.Context, api icore.CoreAPI, err error) {
+	// Create IPFS node
+	ctx, cancel = context.WithCancel(context.Background())
+
+	fmt.Printf("\n[Creating embedded IPFS Node]\n")
+	err = setAutoRelay(false, path)
+	if err != nil && err.Error() != "ipfs not initialized, please run 'ipfs init'" {
+		return ctx, api, err
+	}
+	api, err = setupNode(ctx, path)
+	if err != nil {
+		return ctx, api, err
+	}
+
+	// Wait 30s before testing reachability
+	fmt.Printf("\n[Checking Node Reachability on Arken Network]\n")
+	time.Sleep(30 * time.Second)
+	public, err := checkReachability(api)
+	if err != nil {
+		return ctx, api, err
+	}
+	// If the node isn't publicly reachable switch to relay system.
+	if !public {
+		cancel()
+		fmt.Printf("\n[Node unable to be reached by network.]\n")
+		fmt.Printf("[Recreating using Circut Relay System.]\n")
+
+		setAutoRelay(true, path)
+
+		// Wait for port to free
+		time.Sleep(30 * time.Second)
+
+		// Recreate IPFS Node
+		ctx, cancel = context.WithCancel(context.Background())
+		api, err = createNode(ctx, path)
+		if err != nil {
+			return ctx, api, err
+		}
+		fmt.Printf("[Node Re-Created Sucessfully]\n")
+	} else {
+		fmt.Printf("\n[Arken Node is Publicly Reachable with NAT]\n")
+	}
+	return ctx, api, nil
+}
+
+func setAutoRelay(relay bool, path string) (err error) {
+	cfg, err := fsrepo.ConfigAt(path)
+	if err != nil {
+		return err
+	}
+	cfg.Swarm.EnableAutoRelay = relay
+	configFilename, err := config.Filename(path)
+	if err != nil {
+		return err
+	}
+	if err := serialize.WriteConfigFile(configFilename, cfg); err != nil {
+		return err
+	}
+	return nil
+}
+
+// checkReachability tests if the IPFS node is reachable by the network
+// and opts to use a relay if it is not.
+func checkReachability(api icore.CoreAPI) (public bool, err error) {
+	ips := []string{"/ip4/10.", "/ip4/192.", "/ip4/127.", "/ip4/172.", "/ip6/"}
+
+	multi, err := api.Swarm().LocalAddrs(ctx)
+	if err != nil {
+		return false, err
+	}
+	for addrNum := range multi {
+		addr := multi[addrNum].String()
+		private := false
+
+		for ipNum := range ips {
+			if strings.HasPrefix(addr, ips[ipNum]) {
+				private = true
+			}
+		}
+		if !private {
+			// Public Address Found. Return that node is reachable.
+			return true, nil
+		}
+	}
+	// No public IPs were found. Return that node is NOT reachable.
+	return false, nil
 }
 
 // GetID returns the identifier of the node.
@@ -119,7 +197,7 @@ func setupPlugins(externalPluginsPath string) error {
 }
 
 // Spawns an IPFS node creating the config/storage repository if it doesn't already exist.
-func spawnNode(ctx context.Context, path string) (icore.CoreAPI, error) {
+func setupNode(ctx context.Context, path string) (icore.CoreAPI, error) {
 
 	if err := setupPlugins(path); err != nil {
 		return nil, err
@@ -226,7 +304,6 @@ func createRepo(ctx context.Context, path string) (string, error) {
 	cfg.Reprovider.Strategy = "all"
 	cfg.Reprovider.Interval = "1h"
 	cfg.Routing.Type = "dhtserver"
-	cfg.Swarm.EnableAutoRelay = true
 
 	// Create the repo with the config
 	err = fsrepo.Init(path, cfg)

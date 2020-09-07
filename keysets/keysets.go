@@ -1,7 +1,7 @@
 package keysets
 
 import (
-	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/arkenproject/arken/config"
@@ -14,7 +14,6 @@ import (
 // to local repositories.
 func LoadSets(keysets []config.KeySet) (err error) {
 	for repo := range keysets {
-		fmt.Printf("Indexing: %s\n", filepath.Base(keysets[repo].URL))
 		location := filepath.Join(config.Global.Sources.Repositories, filepath.Base(keysets[repo].URL))
 		r, err := git.PlainOpen(location)
 		if err != nil && err.Error() == "repository does not exist" {
@@ -26,7 +25,6 @@ func LoadSets(keysets []config.KeySet) (err error) {
 			if err != nil {
 				return err
 			}
-
 		} else {
 			if err != nil {
 				return err
@@ -44,27 +42,14 @@ func LoadSets(keysets []config.KeySet) (err error) {
 					return err
 				}
 				continue
-			}
-			if err != nil {
+			} else if err != nil && err.Error() == "non-fast-forward update" {
+				os.RemoveAll(location)
+				return LoadSets(keysets)
+			} else if err != nil {
 				return err
 			}
 		}
 		err = importKeysetSettings(&keysets[repo], location)
-		if err != nil {
-			return err
-		}
-
-		err = configLighthouse(keysets[repo].LightHouseFileID, keysets[repo].URL)
-		if err != nil {
-			return err
-		}
-
-		err = index(location)
-		if err != nil {
-			return err
-		}
-
-		err = garbageCollect(keysets[repo])
 		if err != nil {
 			return err
 		}
