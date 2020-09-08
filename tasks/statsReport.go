@@ -11,10 +11,12 @@ import (
 // StatsReporting periodically reports node statistics for
 // configured keysets.
 func StatsReporting() {
-	// If allowed report the stats to the keyset stats server.
-	err := stats.Report(config.Keysets)
-	if err != nil {
-		log.Println(err)
+	for {
+		// If allowed report the stats to the keyset stats server.
+		err := stats.Report(config.Keysets)
+		if err != nil {
+			log.Println(err)
+		}
+		time.Sleep(1 * time.Hour)
 	}
-	time.Sleep(1 * time.Hour)
 }
