@@ -2,6 +2,7 @@ package keysets
 
 import (
 	"bufio"
+	"database/sql"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,38 +15,7 @@ import (
 )
 
 // Index extracts the file identifiers from the keyset provided.
-func Index(path string, new chan database.FileKey, output chan database.FileKey) (err error) {
-	r, err := git.PlainOpen(path)
-	if err != nil {
-		return err
-	}
-	ref, err := r.Head()
-	if err != nil {
-		return err
-	}
-	if config.Global.General.IndexHash == "" {
-		err = indexFull(path, new, output)
-		if err != nil {
-			return err
-		}
-	} else {
-		if ref.Hash().String() != config.Global.General.IndexHash {
-			hash := plumbing.NewHash(config.Global.General.IndexHash)
-			err = indexPatch(path, hash, new, output)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	config.Global.General.IndexHash = ref.Hash().String()
-	config.GenConf(config.Global)
-
-	return nil
-}
-
-// IndexFull walks through the repository structure and extracts file identifiers from found
-// .ks files.
-func indexFull(rootPath string, new chan database.FileKey, output chan database.FileKey) (err error) {
+func Index(path string, new chan database.FileKey, output chan database.FileKey, settings chan string) (err error) {
 	copyName := filepath.Join(filepath.Dir(config.Global.Database.Path), "index.db")
 	err = database.Copy(config.Global.Database.Path, copyName)
 	defer os.Remove(copyName)
@@ -56,6 +26,37 @@ func indexFull(rootPath string, new chan database.FileKey, output chan database.
 	}
 	defer db.Close()
 
+	r, err := git.PlainOpen(path)
+	if err != nil {
+		return err
+	}
+	ref, err := r.Head()
+	if err != nil {
+		return err
+	}
+	hash, err := database.GetCommit(db)
+	if err != nil && err.Error() == "entry not found" {
+		err = indexFull(db, path, new, output)
+		if err != nil {
+			return err
+		}
+	} else {
+		if ref.Hash().String() != hash {
+			hash := plumbing.NewHash(hash)
+			err = indexPatch(path, hash, new, output)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	settings <- ref.Hash().String()
+
+	return nil
+}
+
+// IndexFull walks through the repository structure and extracts file identifiers from found
+// .ks files.
+func indexFull(db *sql.DB, rootPath string, new chan database.FileKey, output chan database.FileKey) (err error) {
 	fileTemplate := database.FileKey{
 		Size:   -1,
 		Status: "remote",

@@ -11,7 +11,7 @@ import (
 	"github.com/arkenproject/arken/database"
 )
 
-func databaseReader(output chan database.FileKey) {
+func databaseReader(remote chan database.FileKey, output chan database.FileKey) {
 	for {
 		fmt.Println("\n[Starting Rebalancing]")
 		copyName := filepath.Join(filepath.Dir(config.Global.Database.Path), "checkRemotes.db")
@@ -26,6 +26,13 @@ func databaseReader(output chan database.FileKey) {
 		go database.GetAll(db, "remote", "", relay)
 
 		for entry := range relay {
+			remote <- entry
+		}
+
+		deleted := make(chan database.FileKey, 10)
+		go database.GetAll(db, "removed", "", deleted)
+
+		for entry := range deleted {
 			output <- entry
 		}
 

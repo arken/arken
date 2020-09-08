@@ -46,6 +46,13 @@ func Open(path string) (db *sql.DB, err error) {
 
 			PRIMARY KEY(time)
 		);
+
+		CREATE TABLE IF NOT EXISTS commitCheckpoint(
+			name TEXT NOT NULL,
+			hash TEXT NOT NULL,
+
+			PRIMARY KEY(name)
+		);
 	`)
 	if err != nil {
 		return db, err

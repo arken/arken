@@ -17,6 +17,8 @@ func Main() {
 	remote := make(chan database.FileKey, 10)
 	// Contents of output will be added to the database.
 	output := make(chan database.FileKey, 10)
+	// Contents of settings will be hash strings for checkpointing database.
+	settings := make(chan string)
 
 	// Open connection to Database
 	db, err := database.Open(config.Global.Database.Path)
@@ -26,7 +28,7 @@ func Main() {
 	defer db.Close()
 
 	// Initialize Database Writer Function
-	go databaseWriter(db, output)
+	go databaseWriter(db, output, settings)
 
 	// Load KeySet Configurations on Boot
 	err = keysets.LoadSets(config.Keysets)
@@ -35,13 +37,13 @@ func Main() {
 	}
 
 	// Initialize Keyset Refresh Task
-	go loadSets(config.Keysets, new, output)
+	go loadSets(config.Keysets, new, output, settings)
 
 	// Initialize Engine Network Limit Test
 	go checkNetworkLimit()
 
 	// Initialize Database Reader
-	go databaseReader(remote)
+	go databaseReader(remote, output)
 
 	err = engine.Run(new, remote, output)
 	if err != nil {
