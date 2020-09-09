@@ -2,7 +2,6 @@ package tasks
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"time"
 
@@ -34,7 +33,6 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 			timeout = 0
 
 		case entry := <-input:
-			fmt.Printf("Wrote Entry to DB: %s\n", entry.ID)
 			if db == nil {
 				db, err = database.Open(config.Global.Database.Path)
 				if err != nil {

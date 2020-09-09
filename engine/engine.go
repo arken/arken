@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/arkenproject/arken/config"
 	"github.com/arkenproject/arken/database"
@@ -41,7 +40,6 @@ func Run(new, remotes, output chan database.FileKey) (err error) {
 	}
 
 	for {
-		fmt.Printf("New: %d, Remotes: %d, Output: %d\n", len(new), len(remotes), len(output))
 		if NetworkLimit {
 			select {
 			case entry := <-new:
@@ -50,22 +48,15 @@ func Run(new, remotes, output chan database.FileKey) (err error) {
 			case entry := <-remotes:
 				output <- entry
 				continue
-			default:
-				time.Sleep(15 * time.Second)
 			}
 		} else {
 			select {
 			case entry := <-new:
-				fmt.Printf("From Indexer: %s\n", entry.ID)
 				input <- entry
 				continue
 			case entry := <-remotes:
-				fmt.Printf("From Database: %s\n", entry.ID)
 				input <- entry
 				continue
-			default:
-				fmt.Printf("No Signal\n")
-				time.Sleep(15 * time.Second)
 			}
 		}
 
@@ -83,7 +74,6 @@ func genNumWorkers() int {
 
 func runWorker(keysets map[string]int, input <-chan database.FileKey, output chan<- database.FileKey, num int) {
 	for key := range input {
-		fmt.Printf("[Worker %d] Busy\n", num)
 		threshold := keysets[key.KeySet]
 		replications, err := ipfs.FindProvs(key.ID, threshold)
 		if err != nil {
@@ -102,6 +92,5 @@ func runWorker(keysets map[string]int, input <-chan database.FileKey, output cha
 		}
 		key.Replications = replications
 		output <- key
-		fmt.Printf("[Worker %d] Free\n", num)
 	}
 }
