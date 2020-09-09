@@ -108,6 +108,7 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 		default:
 			if timeout > 30 && db != nil {
 				db.Close()
+				db = nil
 			} else {
 				timeout++
 			}

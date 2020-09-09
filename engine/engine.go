@@ -20,7 +20,7 @@ var NetworkLimit bool
 // between nodes.
 func Run(new, remotes, output chan database.FileKey) (err error) {
 	keysets := make(map[string]int)
-	input := make(chan database.FileKey)
+	input := make(chan database.FileKey, 10)
 
 	for set := range config.Keysets {
 		name := strings.Split(filepath.Base(config.Keysets[set].URL), ".")[0]
@@ -37,7 +37,7 @@ func Run(new, remotes, output chan database.FileKey) (err error) {
 	workers := genNumWorkers()
 	// Generate Worker Threads
 	for i := 0; i < workers; i++ {
-		go runWorker(keysets, input, output)
+		go runWorker(keysets, input, output, i)
 	}
 
 	for {
@@ -46,8 +46,10 @@ func Run(new, remotes, output chan database.FileKey) (err error) {
 			select {
 			case entry := <-new:
 				output <- entry
+				continue
 			case entry := <-remotes:
 				output <- entry
+				continue
 			default:
 				time.Sleep(15 * time.Second)
 			}
@@ -56,9 +58,11 @@ func Run(new, remotes, output chan database.FileKey) (err error) {
 			case entry := <-new:
 				fmt.Printf("From Indexer: %s\n", entry.ID)
 				input <- entry
+				continue
 			case entry := <-remotes:
 				fmt.Printf("From Database: %s\n", entry.ID)
 				input <- entry
+				continue
 			default:
 				fmt.Printf("No Signal\n")
 				time.Sleep(15 * time.Second)
@@ -77,8 +81,9 @@ func genNumWorkers() int {
 	return 1
 }
 
-func runWorker(keysets map[string]int, input <-chan database.FileKey, output chan<- database.FileKey) {
+func runWorker(keysets map[string]int, input <-chan database.FileKey, output chan<- database.FileKey, num int) {
 	for key := range input {
+		fmt.Printf("[Worker %d] Busy\n", num)
 		threshold := keysets[key.KeySet]
 		replications, err := ipfs.FindProvs(key.ID, threshold)
 		if err != nil {
@@ -97,5 +102,6 @@ func runWorker(keysets map[string]int, input <-chan database.FileKey, output cha
 		}
 		key.Replications = replications
 		output <- key
+		fmt.Printf("[Worker %d] Free\n", num)
 	}
 }
