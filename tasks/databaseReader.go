@@ -22,14 +22,14 @@ func databaseReader(remote chan database.FileKey, output chan database.FileKey) 
 			log.Fatal(err)
 		}
 
-		relay := make(chan database.FileKey, 10)
+		relay := make(chan database.FileKey)
 		go database.GetAll(db, "remote", "", relay)
 
 		for entry := range relay {
 			remote <- entry
 		}
 
-		deleted := make(chan database.FileKey, 10)
+		deleted := make(chan database.FileKey)
 		go database.GetAll(db, "removed", "", deleted)
 
 		for entry := range deleted {

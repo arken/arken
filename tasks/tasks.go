@@ -16,22 +16,15 @@ func Main() {
 	// Remove is for existing remote files from the database.
 	remote := make(chan database.FileKey, 10)
 	// Contents of output will be added to the database.
-	output := make(chan database.FileKey, 10)
+	output := make(chan database.FileKey, 20)
 	// Contents of settings will be hash strings for checkpointing database.
-	settings := make(chan string)
-
-	// Open connection to Database
-	db, err := database.Open(config.Global.Database.Path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
+	settings := make(chan string, 1)
 
 	// Initialize Database Writer Function
-	go databaseWriter(db, output, settings)
+	go databaseWriter(output, settings)
 
 	// Load KeySet Configurations on Boot
-	err = keysets.LoadSets(config.Keysets)
+	err := keysets.LoadSets(config.Keysets)
 	if err != nil {
 		log.Fatal(err)
 	}

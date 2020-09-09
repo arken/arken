@@ -2,23 +2,46 @@ package tasks
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
+	"github.com/arkenproject/arken/config"
 	"github.com/arkenproject/arken/database"
 	"github.com/arkenproject/arken/ipfs"
 )
 
-func databaseWriter(db *sql.DB, input chan database.FileKey, settings chan string) {
+func databaseWriter(input chan database.FileKey, settings chan string) {
+	var (
+		timeout int
+		db      *sql.DB
+		err     error
+	)
+
 	for {
 		select {
 		case commit := <-settings:
+			if db == nil {
+				db, err = database.Open(config.Global.Database.Path)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
 			err := database.SetCommit(db, commit)
 			if err != nil {
 				log.Fatal(err)
 			}
+			timeout = 0
 
 		case entry := <-input:
+			fmt.Printf("Wrote Entry to DB: %s\n", entry.ID)
+			if db == nil {
+				db, err = database.Open(config.Global.Database.Path)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+			timeout = 0
 			// Test if the File is in the database.
 			prev, err := database.Get(db, entry.ID)
 			if err != nil && err.Error() == "entry not found" {
@@ -83,6 +106,11 @@ func databaseWriter(db *sql.DB, input chan database.FileKey, settings chan strin
 			}
 
 		default:
+			if timeout > 30 && db != nil {
+				db.Close()
+			} else {
+				timeout++
+			}
 			time.Sleep(15 * time.Second)
 		}
 	}

@@ -41,6 +41,7 @@ func Run(new, remotes, output chan database.FileKey) (err error) {
 	}
 
 	for {
+		fmt.Printf("New: %d, Remotes: %d, Output: %d\n", len(new), len(remotes), len(output))
 		if NetworkLimit {
 			select {
 			case entry := <-new:
@@ -53,10 +54,13 @@ func Run(new, remotes, output chan database.FileKey) (err error) {
 		} else {
 			select {
 			case entry := <-new:
+				fmt.Printf("From Indexer: %s\n", entry.ID)
 				input <- entry
 			case entry := <-remotes:
+				fmt.Printf("From Database: %s\n", entry.ID)
 				input <- entry
 			default:
+				fmt.Printf("No Signal\n")
 				time.Sleep(15 * time.Second)
 			}
 		}
