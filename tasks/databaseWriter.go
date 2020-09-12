@@ -56,8 +56,12 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 			switch {
 			case prev.Status == "":
 				switch {
-				case entry.Status == "local":
+				case entry.Name == "lighthouse":
 					database.Add(db, entry)
+					entry.Status = "local"
+					database.Update(db, entry)
+				case entry.Status == "local":
+					database.Insert(db, entry)
 					database.TransactionCommit(db, "added", entry)
 					continue
 
@@ -67,7 +71,7 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 				// Cover "added", "remote", and "unpinned" statuses.
 				default:
 					entry.Status = "remote"
-					database.Add(db, entry)
+					database.Insert(db, entry)
 					continue
 				}
 			case prev.Status == "local":
