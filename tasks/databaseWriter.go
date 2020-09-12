@@ -5,9 +5,10 @@ import (
 	"log"
 	"time"
 
+	"github.com/arkenproject/arken/ipfs"
+
 	"github.com/arkenproject/arken/config"
 	"github.com/arkenproject/arken/database"
-	"github.com/arkenproject/arken/ipfs"
 )
 
 func databaseWriter(input chan database.FileKey, settings chan string) {
@@ -19,7 +20,10 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 
 	for {
 		select {
+		// If a commit is recieved write it's update to the database.
 		case commit := <-settings:
+			// If the database has been closed due to a timeout of inactivity.
+			// reopen the connection to the database.
 			if db == nil {
 				db, err = database.Open(config.Global.Database.Path)
 				if err != nil {
@@ -31,76 +35,96 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 				log.Fatal(err)
 			}
 			timeout = 0
+			continue
 
+		// If an entry is recieved triage it and write it to the database.
 		case entry := <-input:
+			// Reset timeout on signal recieved.
+			timeout = 0
 			if db == nil {
 				db, err = database.Open(config.Global.Database.Path)
 				if err != nil {
 					log.Fatal(err)
 				}
 			}
-			timeout = 0
-			// Test if the File is in the database.
+
+			// Check for previous entry in database.
 			prev, err := database.Get(db, entry.ID)
-			if err != nil && err.Error() == "entry not found" {
-				// If the entry is not found is should be new.
-				if entry.Status != "removed" {
-					database.Add(db, entry)
-					if entry.Status == "local" {
-						database.TransactionCommit(db, "added", entry)
-					}
-					continue
-				} else {
-					// This would be if the file is marked for
-					// deletion without being in the database somehow.
-					database.Delete(db, entry.ID)
-					continue
-				}
-			}
-			if err != nil {
+			if err != nil && err.Error() != "entry not found" {
 				log.Fatal(err)
 			}
+			switch {
+			case prev.Status == "":
+				switch {
+				case entry.Status == "local":
+					database.Insert(db, entry)
+					database.TransactionCommit(db, "added", entry)
+					continue
 
-			if prev.Status == "removed" {
-				if entry.Status == "local" {
-					err = ipfs.Unpin(entry.ID)
-					if err != nil {
-						log.Fatal(err)
-					}
-					database.TransactionCommit(db, "removed", entry)
+				case entry.Status == "removed":
+					continue
+
+				// Cover "added", "remote", and "unpinned" statuses.
+				default:
+					entry.Status = "remote"
+					database.Insert(db, entry)
+					continue
 				}
-				database.Delete(db, entry.ID)
-			}
-
-			if entry.Status == "remote" {
-				database.UpdateTime(db, entry)
-				continue
-			}
-
-			if entry.Status == "removed" {
-				if prev.Status == "local" {
-					err = ipfs.Unpin(entry.ID)
-					if err != nil {
-						log.Fatal(err)
-					}
-					database.Delete(db, entry.ID)
-					database.TransactionCommit(db, "removed", entry)
-				} else {
+			case prev.Status == "local":
+				switch {
+				case entry.Status == "removed":
+					ipfs.Unpin(entry.ID)
 					database.Update(db, entry)
+					continue
+
+				case entry.Status == "unpinned":
+					entry.Status = "remote"
+					database.Update(db, entry)
+					continue
+
+				// Cover "added", "local", "remote"
+				default:
+					database.UpdateTime(db, entry)
+					continue
 				}
-				continue
-			}
+			case prev.Status == "remote":
+				switch {
+				case entry.Status == "local":
+					database.Update(db, entry)
+					database.TransactionCommit(db, "added", entry)
+					continue
 
-			if entry.Status == "unpinned" {
-				entry.Status = "remote"
-				database.Update(db, entry)
-				database.TransactionCommit(db, "removed", entry)
-				continue
-			}
+				case entry.Status == "removed":
+					database.Update(db, entry)
+					continue
 
-			if entry.Status == "local" {
-				database.Update(db, entry)
-				database.TransactionCommit(db, "added", entry)
+				// Cover "added", "remote", "unpinned"
+				default:
+					database.UpdateTime(db, entry)
+					continue
+				}
+			case prev.Status == "removed":
+				switch {
+				case entry.Status == "added":
+					entry.Status = "remote"
+					database.Update(db, entry)
+					continue
+
+				case entry.Status == "local":
+					ipfs.Unpin(entry.ID)
+					database.TransactionCommit(db, "removed", entry)
+					database.Delete(db, entry.ID)
+					continue
+
+				case entry.Status == "removed":
+					database.UpdateTime(db, entry)
+					continue
+
+				// Cover "remote", "unpinned"
+				default:
+					database.Delete(db, entry.ID)
+					continue
+				}
 			}
 
 		default:

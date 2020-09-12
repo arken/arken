@@ -33,6 +33,7 @@ func databaseReader(remote chan database.FileKey, output chan database.FileKey) 
 		go database.GetAll(db, "removed", "", deleted)
 
 		for entry := range deleted {
+			entry.Status = "remote"
 			output <- entry
 		}
 

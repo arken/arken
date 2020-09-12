@@ -23,6 +23,10 @@ func makeSpace(bytes int64, keysets map[string]int, output chan<- database.FileK
 	// Iterate through entries returned through channel
 	signal <- true
 	for entry := range input {
+		if entry.Name == "lighthouse" {
+			signal <- true
+			continue
+		}
 		replications, err := ipfs.FindProvs(entry.ID, keysets[entry.KeySet]+10)
 		if err != nil {
 			return -1, err

@@ -42,8 +42,8 @@ func Index(path string, new chan database.FileKey, output chan database.FileKey,
 		}
 	} else {
 		if ref.Hash().String() != hash {
-			hash := plumbing.NewHash(hash)
-			err = indexPatch(path, hash, new, output)
+			hashCommit := plumbing.NewHash(hash)
+			err = indexPatch(path, hashCommit, new, output)
 			if err != nil {
 				return err
 			}
@@ -59,7 +59,7 @@ func Index(path string, new chan database.FileKey, output chan database.FileKey,
 func indexFull(db *sql.DB, rootPath string, new chan database.FileKey, output chan database.FileKey) (err error) {
 	fileTemplate := database.FileKey{
 		Size:   -1,
-		Status: "remote",
+		Status: "added",
 		KeySet: filepath.Base(rootPath)}
 
 	// Walk through entire repository directory structure to look for .ks files.
@@ -132,7 +132,7 @@ func indexPatch(path string, commitHash plumbing.Hash, new chan<- database.FileK
 
 	fileTemplate := database.FileKey{
 		Size:   -1,
-		Status: "remote",
+		Status: "added",
 		KeySet: filepath.Base(path)}
 
 	lines := strings.Split(diff.String(), "\n")

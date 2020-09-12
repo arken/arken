@@ -11,8 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ipfs/go-ipfs/peering"
-
 	arkenConf "github.com/arkenproject/arken/config"
 
 	config "github.com/ipfs/go-ipfs-config"
@@ -35,7 +33,6 @@ var (
 	node   *core.IpfsNode
 	ctx    context.Context
 	cancel context.CancelFunc
-	ps     *peering.PeeringService
 	// AtRiskThreshhold is the number of peers for a piece
 	// of data to be backed up on to be considered safe.
 	AtRiskThreshhold int
@@ -57,15 +54,12 @@ func Init() {
 	}
 	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
 
-	ps = peering.NewPeeringService(node.PeerHost)
-
 	bootstrapNodes := []string{
 		// Arken Bootstrapper node.
 		"/dns4/link.arken.io/tcp/4001/ipfs/QmP8krSfWWHLNL2eah6E1hr6TzoaGMEVRw2Fooy5og1Wpj",
 	}
 
 	go connectToPeers(ctx, ipfs, bootstrapNodes)
-	ps.Start()
 
 	// Run Reprovider Every Hour
 	go func() {
