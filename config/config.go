@@ -70,10 +70,6 @@ func init() {
 	}
 	ConsolidateEnvVars(&Global)
 	readSources()
-	err = createSwarmKey()
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 // LoadDiskConfig loads the Disk Configuration
@@ -92,9 +88,4 @@ func readConf(conf *Config) {
 	if err != nil && !os.IsNotExist(err) {
 		log.Fatal(err)
 	}
-}
-
-func createSwarmKey() (err error) {
-	os.Remove(filepath.Join(Global.Sources.Storage, "swarm.key"))
-	return err
 }
