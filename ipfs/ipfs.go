@@ -53,9 +53,6 @@ func Init() {
 		log.Fatal(err)
 	}
 	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
-	cfg.Reprovider.Strategy = "roots"
-	cfg.Swarm.ConnMgr.HighWater = 100
-	cfg.Bootstrap = nil
 
 	bootstrapNodes := []string{
 		// Arken Bootstrapper node.
@@ -123,9 +120,6 @@ func setAutoRelay(relay bool, path string) (err error) {
 		return err
 	}
 	cfg.Swarm.EnableAutoRelay = relay
-	cfg.Reprovider.Strategy = "roots"
-	cfg.Swarm.ConnMgr.HighWater = 100
-	cfg.Bootstrap = nil
 	configFilename, err := config.Filename(path)
 	if err != nil {
 		return err
@@ -305,7 +299,6 @@ func createRepo(ctx context.Context, path string) (string, error) {
 	cfg.Reprovider.Interval = "1h"
 	cfg.Routing.Type = "dhtserver"
 	cfg.Swarm.ConnMgr.HighWater = 100
-	cfg.Bootstrap = nil
 
 	// Create the repo with the config
 	err = fsrepo.Init(path, cfg)

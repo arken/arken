@@ -1,7 +1,6 @@
 package config
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
@@ -96,11 +95,6 @@ func readConf(conf *Config) {
 }
 
 func createSwarmKey() (err error) {
-	keyData := []byte(`/key/swarm/psk/1.0.0/
-/base16/
-df07473ff051e6bc931fa5b1f5ec8637f6d63de2ca6d9d5125c4f4c11253bdd3`)
-
-	os.MkdirAll(Global.Sources.Storage, os.ModePerm)
-	err = ioutil.WriteFile(filepath.Join(Global.Sources.Storage, "swarm.key"), keyData, 0644)
+	os.Remove(filepath.Join(Global.Sources.Storage, "swarm.key"))
 	return err
 }
