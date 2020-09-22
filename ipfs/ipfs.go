@@ -107,13 +107,10 @@ func setAutoRelay(relay bool, path string) (err error) {
 		return err
 	}
 	cfg.Swarm.EnableAutoRelay = relay
-	bootstrapNodes := []string{
-		// Arken Bootstrapper node.
-		"/dns4/link.arken.io/tcp/4001/ipfs/QmP8krSfWWHLNL2eah6E1hr6TzoaGMEVRw2Fooy5og1Wpj",
+	if relay {
+		cfg.Addresses.Announce = []string{
+			"/dns4/link.arken.io/tcp/4001/ipfs/QmP8krSfWWHLNL2eah6E1hr6TzoaGMEVRw2Fooy5og1Wpj/p2p-circuit/p2p/" + cfg.Identity.PeerID}
 	}
-	cfg.Bootstrap = bootstrapNodes
-	cfg.Swarm.ConnMgr.HighWater = 1200
-	cfg.Swarm.ConnMgr.LowWater = 1000
 
 	configFilename, err := config.Filename(path)
 	if err != nil {
