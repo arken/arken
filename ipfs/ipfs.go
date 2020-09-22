@@ -53,8 +53,7 @@ func Init() {
 		log.Fatal(err)
 	}
 	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
-	cfg.Routing.Type = "dhtclient"
-	cfg.Bootstrap = nil
+	cfg.Routing.Type = "dhtserver"
 
 	bootstrapNodes := []string{
 		// Arken Bootstrapper node.
@@ -116,9 +115,8 @@ func setAutoRelay(relay bool, path string) (err error) {
 		return err
 	}
 	cfg.Swarm.EnableAutoRelay = relay
-	cfg.Routing.Type = "dhtclient"
-	cfg.Swarm.ConnMgr.HighWater = 1000
-	cfg.Bootstrap = nil
+	cfg.Routing.Type = "dhtserver"
+
 	configFilename, err := config.Filename(path)
 	if err != nil {
 		return err
@@ -296,7 +294,7 @@ func createRepo(ctx context.Context, path string) (string, error) {
 	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
 	cfg.Reprovider.Strategy = "roots"
 	cfg.Reprovider.Interval = "1h"
-	cfg.Routing.Type = "dhtclient"
+	cfg.Routing.Type = "dhtserver"
 	cfg.Bootstrap = nil
 	cfg.Swarm.ConnMgr.HighWater = 1000
 
