@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/ipfs/interface-go-ipfs-core/options"
+	"github.com/libp2p/go-libp2p-core/peer"
+	"github.com/libp2p/go-libp2p-core/routing"
 
 	icorepath "github.com/ipfs/interface-go-ipfs-core/path"
 )
@@ -12,22 +14,33 @@ import (
 // FindProvs queries the IPFS network for the number of
 // providers hosting a given file
 func FindProvs(hash string, maxPeers int) (replications int, err error) {
-	contxt, cancl := context.WithTimeout(ctx, 5*time.Second)
 	path := icorepath.New("/ipfs/" + hash)
+	contxt, cancl := context.WithTimeout(ctx, 5*time.Second)
+	contxt, events := routing.RegisterForQueryEvents(contxt)
+
 	output, err := ipfs.Dht().FindProviders(contxt, path, func(input *options.DhtFindProvidersSettings) error {
-		input.NumProviders = maxPeers + 10
+		input.NumProviders = maxPeers + 15
 		return nil
 	})
 	if err != nil {
 		cancl()
 		return -1, err
 	}
+	go func() {
+		defer cancl()
+		for p := range output {
+			np := p
+			routing.PublishQueryEvent(ctx, &routing.QueryEvent{
+				Type:      routing.Provider,
+				Responses: []*peer.AddrInfo{&np},
+			})
+		}
+	}()
 
-	count := 0
-	for range output {
-		_ = <-output
-		count++
+	set := make(map[string]bool)
+	for node := range events {
+		set[node.ID.String()] = true
 	}
-	cancl()
-	return count, nil
+
+	return len(set), nil
 }
