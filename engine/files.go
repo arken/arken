@@ -20,7 +20,7 @@ func ReplicateAtRiskFile(file database.FileKey, keysets map[string]int, write ch
 	prob := rand.Float32()
 
 	if prob > activationEnergy {
-		fmt.Printf("Getting Size of: %s\n", file.ID)
+		fmt.Printf("Pinning to Local Storage: %s\n", file.ID)
 		file.Size, err = ipfs.GetSize(file.ID)
 		if err != nil {
 			return file, err
@@ -49,7 +49,6 @@ func ReplicateAtRiskFile(file database.FileKey, keysets map[string]int, write ch
 			}
 		}
 
-		fmt.Printf("Pinning to Local Storage: %s\n", file.ID)
 		err = ipfs.Pin(file.ID)
 		if err != nil {
 			return file, err
