@@ -75,25 +75,23 @@ func genNumWorkers() int {
 
 func runWorker(keysets map[string]int, input <-chan database.FileKey, output chan<- database.FileKey, num int) {
 	for key := range input {
-		if !NetworkLimit {
-			threshold := keysets[key.KeySet]
-			replications, err := ipfs.FindProvs(key.ID, threshold)
+		threshold := keysets[key.KeySet]
+		replications, err := ipfs.FindProvs(key.ID, threshold)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("File: %s is backed up %d time(s) and the threshold is %d.\n", key.ID, replications, threshold)
+
+		// Determine an at risk file.
+		// Node: if a file is hosted 0 times don't try to pin it.
+		if replications < threshold && replications >= 1 {
+			key, err = ReplicateAtRiskFile(key, keysets, output)
 			if err != nil {
 				log.Fatal(err)
 			}
-
-			fmt.Printf("File: %s is backed up %d time(s) and the threshold is %d.\n", key.ID, replications, threshold)
-
-			// Determine an at risk file.
-			// Node: if a file is hosted 0 times don't try to pin it.
-			if replications < threshold && replications >= 1 {
-				key, err = ReplicateAtRiskFile(key, keysets, output)
-				if err != nil {
-					log.Fatal(err)
-				}
-			}
-			key.Replications = replications
 		}
+		key.Replications = replications
 		output <- key
 	}
 }
