@@ -29,6 +29,12 @@ func Main() {
 		log.Fatal(err)
 	}
 
+	// Check the Size of the Node Storage Utilization
+	err = checkNodeSize(output)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Initialize Keyset Refresh Task
 	go loadSets(config.Keysets, new, output, settings)
 

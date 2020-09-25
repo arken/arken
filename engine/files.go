@@ -39,7 +39,7 @@ func ReplicateAtRiskFile(file database.FileKey, keysets map[string]int, write ch
 			return file, err
 		}
 		if int64(file.Size) > int64(poolSize)-int64(repoSize) {
-			err := makeSpace(int64(file.Size), write)
+			err := MakeSpace(int64(file.Size), write, false)
 			if err != nil {
 				if err.Error() == "could not make space" {
 					return file, nil

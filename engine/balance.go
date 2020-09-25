@@ -16,11 +16,16 @@ import (
 
 var (
 	output chan []database.FileKey
-	signal chan int64
+	signal chan spaceRequest
 )
 
+type spaceRequest struct {
+	space int64
+	force bool
+}
+
 func init() {
-	signal = make(chan int64)
+	signal = make(chan spaceRequest)
 	output = make(chan []database.FileKey)
 
 	go makeSpaceDaemon()
@@ -81,19 +86,19 @@ func makeSpaceDaemon() {
 				if err != nil {
 					log.Fatal(err)
 				}
-				if replications > keysets[entry.KeySet] {
+				if request.force || replications > keysets[entry.KeySet] {
 					response = append(response, entry)
 
 					// Record updated removed sum.
 					sum = sum + int64(entry.Size)
 				}
-				if sum >= request {
+				if sum >= request.space {
 					break
 				} else {
 					ping <- true
 				}
 			}
-			if sum >= request {
+			if sum >= request.space {
 				output <- response
 			} else {
 				running = false
@@ -119,9 +124,14 @@ func makeSpaceDaemon() {
 	}
 }
 
-func makeSpace(bytes int64, filesOut chan<- database.FileKey) (err error) {
+// MakeSpace unpins X bytes worth of files from the node.
+// In the case of adding new files this is done non-forcefully to only remove
+// well backed up files if possible.
+// In the case of forcing the node back to the pool size this is done forcefully
+// removing all files nessisary to meet the request.
+func MakeSpace(bytes int64, filesOut chan<- database.FileKey, force bool) (err error) {
 	// Make request to backend daemon.
-	signal <- bytes
+	signal <- spaceRequest{space: bytes, force: force}
 
 	// Wait for response.
 	response := <-output

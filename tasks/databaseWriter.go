@@ -135,10 +135,14 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 			if timeout > 30 && db != nil {
 				db.Close()
 				db = nil
+			} else if timeout > 30 {
+				time.Sleep(30 * time.Second)
+			} else if timeout > 15 {
+				time.Sleep(5 * time.Second)
+				timeout++
 			} else {
 				timeout++
 			}
-			time.Sleep(15 * time.Second)
 		}
 	}
 }
