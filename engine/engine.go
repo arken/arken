@@ -14,11 +14,12 @@ import (
 
 // NetworkLimit is true if the node has hit it's download limit for the month.
 var NetworkLimit bool
+var keysets map[string]int
 
 // Run manages balancing new and at risk files
 // between nodes.
 func Run(new, remotes, output chan database.FileKey) (err error) {
-	keysets := make(map[string]int)
+	keysets = make(map[string]int)
 	input := make(chan database.FileKey, 10)
 
 	for set := range config.Keysets {

@@ -20,7 +20,6 @@ func ReplicateAtRiskFile(file database.FileKey, keysets map[string]int, write ch
 	prob := rand.Float32()
 
 	if prob > activationEnergy {
-		fmt.Printf("Pinning to Local Storage: %s\n", file.ID)
 		file.Size, err = ipfs.GetSize(file.ID)
 		if err != nil {
 			return file, err
@@ -39,16 +38,17 @@ func ReplicateAtRiskFile(file database.FileKey, keysets map[string]int, write ch
 		if err != nil {
 			return file, err
 		}
-		if uint64(file.Size) >= poolSize-repoSize {
-			bytes, err := makeSpace(int64(file.Size), keysets, write)
+		if int64(file.Size) > int64(poolSize)-int64(repoSize) {
+			err := makeSpace(int64(file.Size), write)
 			if err != nil {
-				return file, err
-			}
-			if bytes < int64(file.Size) {
+				if err.Error() == "could not make space" {
+					return file, nil
+				}
 				return file, err
 			}
 		}
 
+		fmt.Printf("Pinning to Local Storage: %s\n", file.ID)
 		err = ipfs.Pin(file.ID)
 		if err != nil {
 			return file, err

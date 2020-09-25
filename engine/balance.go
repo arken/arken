@@ -1,55 +1,142 @@
 package engine
 
 import (
+	"database/sql"
+	"errors"
+	"log"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/arkenproject/arken/ipfs"
 
 	"github.com/arkenproject/arken/config"
 	"github.com/arkenproject/arken/database"
 )
 
-func makeSpace(bytes int64, keysets map[string]int, output chan<- database.FileKey) (removedBytes int64, err error) {
-	db, err := database.Open(config.Global.Database.Path)
-	if err != nil {
-		return -1, err
-	}
-	// Set up database channels.
-	input := make(chan database.FileKey)
-	signal := make(chan bool)
-	go database.GetStream(db, "local", "", input, signal)
+var (
+	output chan []database.FileKey
+	signal chan int64
+)
 
-	// Create Sum to track removed files.
-	var sum int64
+func init() {
+	signal = make(chan int64)
+	output = make(chan []database.FileKey)
 
-	// Iterate through entries returned through channel
-	signal <- true
-	for entry := range input {
-		if entry.Name == "lighthouse" {
-			signal <- true
-			continue
-		}
-		replications, err := ipfs.FindProvs(entry.ID, keysets[entry.KeySet]+10)
-		if err != nil {
-			return -1, err
-		}
-		if replications > keysets[entry.KeySet] {
-			// Unpin the file from storage.
-			err := ipfs.Unpin(entry.ID)
-			if err != nil {
-				return -1, err
+	go makeSpaceDaemon()
+}
+
+func makeSpaceDaemon() {
+	var (
+		running  bool
+		timeout  int
+		db       *sql.DB
+		err      error
+		ping     chan bool
+		input    chan database.FileKey
+		copyName string
+		lastSum  int64
+	)
+
+	for {
+		select {
+		case request := <-signal:
+			if db == nil {
+				copyName = filepath.Join(filepath.Dir(config.Global.Database.Path), "collect.db")
+				err = database.Copy(config.Global.Database.Path, copyName)
+				if err != nil {
+					log.Fatal(err)
+				}
+				db, err = database.Open(copyName)
+				if err != nil {
+					log.Fatal(err)
+				}
+			} else {
+				if lastSum == 0 {
+					output <- []database.FileKey{}
+					timeout = 0
+					continue
+				}
 			}
+			if !running {
+				// Set up database channels.
+				input = make(chan database.FileKey)
+				ping = make(chan bool)
+				go database.GetStream(db, "local", "", input, ping)
+				running = true
+			}
+			// Send request to GetStream
+			ping <- true
+			// Create Sum to track removed files.
+			var sum int64
+			sum = 0
+			var response []database.FileKey
 
-			// Update value in database.
-			entry.Status = "unpinned"
-			output <- entry
+			for entry := range input {
+				if entry.Name == "lighthouse" {
+					ping <- true
+					continue
+				}
+				replications, err := ipfs.FindProvs(entry.ID, keysets[entry.KeySet]+10)
+				if err != nil {
+					log.Fatal(err)
+				}
+				if replications > keysets[entry.KeySet] {
+					response = append(response, entry)
 
-			// Record updated removed sum.
-			sum = sum + int64(entry.Size)
-		}
-		if sum >= bytes {
-			signal <- false
-		} else {
-			signal <- true
+					// Record updated removed sum.
+					sum = sum + int64(entry.Size)
+				}
+				if sum >= request {
+					break
+				} else {
+					ping <- true
+				}
+			}
+			if sum >= request {
+				output <- response
+			} else {
+				running = false
+				output <- []database.FileKey{}
+			}
+			lastSum = sum
+			timeout = 0
+			continue
+
+		default:
+			if timeout > 30 && db != nil {
+				ping <- false
+				db.Close()
+				db = nil
+				lastSum = -1
+				running = false
+				os.Remove(copyName)
+			} else {
+				timeout++
+			}
+			time.Sleep(15 * time.Second)
 		}
 	}
-	return sum, nil
+}
+
+func makeSpace(bytes int64, filesOut chan<- database.FileKey) (err error) {
+	// Make request to backend daemon.
+	signal <- bytes
+
+	// Wait for response.
+	response := <-output
+
+	if len(response) > 0 {
+		for _, file := range response {
+			// Unpin the file from storage.
+			err := ipfs.Unpin(file.ID)
+			if err != nil {
+				return err
+			}
+			file.Status = "unpinned"
+			filesOut <- file
+		}
+		return nil
+	}
+	return errors.New("could not make space")
 }

@@ -131,5 +131,6 @@ func GetStream(db *sql.DB, statusPattern string, keySet string, output chan File
 		}
 	}
 	_ = <-signal
+	close(signal)
 	close(output)
 }
