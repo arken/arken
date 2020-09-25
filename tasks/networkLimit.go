@@ -18,10 +18,10 @@ func checkNetworkLimit() {
 		log.Fatal(err)
 	}
 	if limit && !engine.NetworkLimit {
-		fmt.Printf("\n[Cancelling Rebalance due to Network Limit Hit]\n")
+		fmt.Printf("\n[Cancelling File Sync due to Network Limit Hit]\n")
 	}
 	if !limit && engine.NetworkLimit {
-		fmt.Printf("\n[Network Limit Below Threshold, Resuming Balance Operations]\n")
+		fmt.Printf("\n[Network Limit Below Threshold, Resuming File Sync Operations]\n")
 	}
 
 	engine.NetworkLimit = limit
