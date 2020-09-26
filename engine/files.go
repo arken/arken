@@ -27,15 +27,15 @@ func ReplicateAtRiskFile(file database.FileKey, keysets map[string]int, write ch
 
 		// If the file is bigger than the entire pool size then don't try to pin it.
 		poolSize := config.ParseWellFormedPoolSize(config.Global.General.PoolSize)
-		if err != nil {
-			return output, err
-		}
 		if uint64(file.Size) >= poolSize {
 			return file, err
 		}
 
 		repoSize, err := ipfs.GetRepoSize()
 		if err != nil {
+			if err.Error() == "context deadline exceeded" {
+				return file, nil
+			}
 			return file, err
 		}
 		if int64(file.Size) > int64(poolSize)-int64(repoSize) {
