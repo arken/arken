@@ -146,7 +146,8 @@ func MakeSpace(bytes int64, filesOut chan<- database.FileKey, force bool) (err e
 			file.Status = "unpinned"
 			filesOut <- file
 		}
-		return nil
+		err = ipfs.GC()
+		return err
 	}
 	return errors.New("could not make space")
 }

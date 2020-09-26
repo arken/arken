@@ -116,6 +116,7 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 
 				case entry.Status == "local":
 					ipfs.Unpin(entry.ID)
+					ipfs.GC()
 					database.TransactionCommit(db, "removed", entry)
 					database.Delete(db, entry.ID)
 					continue

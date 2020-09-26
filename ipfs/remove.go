@@ -19,9 +19,14 @@ func Unpin(hash string) (err error) {
 	if err != nil && !strings.HasPrefix(err.Error(), "not pinned") {
 		return err
 	}
+	return nil
+}
+
+// GC runs a garbage collection scan on the IPFS node.
+func GC() (err error) {
 	err = corerepo.GarbageCollect(node, ctx)
 	if err != nil {
 		return err
 	}
-	return nil
+	return err
 }
