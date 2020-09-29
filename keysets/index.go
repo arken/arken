@@ -43,7 +43,7 @@ func Index(path string, new chan database.FileKey, output chan database.FileKey,
 	} else {
 		if ref.Hash().String() != hash {
 			hashCommit := plumbing.NewHash(hash)
-			err = indexPatch(path, hashCommit, new, output)
+			err = indexPatch(db, path, hashCommit, new, output)
 			if err != nil {
 				return err
 			}
@@ -106,7 +106,7 @@ func indexFull(db *sql.DB, rootPath string, new chan database.FileKey, output ch
 	return err
 }
 
-func indexPatch(path string, commitHash plumbing.Hash, new chan<- database.FileKey, output chan<- database.FileKey) (err error) {
+func indexPatch(db *sql.DB, path string, commitHash plumbing.Hash, new chan<- database.FileKey, output chan<- database.FileKey) (err error) {
 	r, err := git.PlainOpen(path)
 	if err != nil {
 		return err
@@ -145,7 +145,10 @@ func indexPatch(path string, commitHash plumbing.Hash, new chan<- database.FileK
 			fileTemplate.ID = strings.TrimPrefix(data[0], "+")
 			fileTemplate.Name = data[1]
 			output <- fileTemplate
-			new <- fileTemplate
+			_, err := database.Get(db, fileTemplate.ID)
+			if err != nil && err.Error() == "entry not found" {
+				new <- fileTemplate
+			}
 		}
 		if strings.HasPrefix(lines[i], "-Qm") {
 			data := strings.Fields(lines[i])
