@@ -78,6 +78,9 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 				switch {
 				case entry.Status == "removed":
 					ipfs.Unpin(entry.ID)
+					ipfs.AdjustRepoSize(0 - int64(entry.Size))
+					ipfs.GC()
+					database.TransactionCommit(db, "removed", entry)
 					database.Update(db, entry)
 					continue
 
@@ -116,6 +119,7 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 
 				case entry.Status == "local":
 					ipfs.Unpin(entry.ID)
+					ipfs.AdjustRepoSize(0 - int64(entry.Size))
 					ipfs.GC()
 					database.TransactionCommit(db, "removed", entry)
 					database.Delete(db, entry.ID)

@@ -154,15 +154,6 @@ func GetID() (result string) {
 	return node.Identity.Pretty()
 }
 
-// GetRepoSize returns the size of the repo in bytes.
-func GetRepoSize() (result uint64, err error) {
-	out, err := node.Repo.GetStorageUsage()
-	if err != nil {
-		return result, err
-	}
-	return out, nil
-}
-
 func setupPlugins(externalPluginsPath string) error {
 	// Load any external plugins if available on externalPluginsPath
 	plugins, err := loader.NewPluginLoader(filepath.Join(externalPluginsPath, "plugins"))

@@ -55,6 +55,7 @@ func ReplicateAtRiskFile(file database.FileKey, keysets map[string]int, write ch
 		if err != nil {
 			return file, err
 		}
+		ipfs.AdjustRepoSize(int64(file.Size))
 		fmt.Printf("Pinned to Local Storage: %s\n", file.ID)
 
 		file.Status = "local"
