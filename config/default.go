@@ -16,7 +16,7 @@ func defaultConf() Config {
 			// Configuration version number. If a field is added or changed
 			// in this default, the version must be changed to tell the app
 			// to rebuild the users config files.
-			Version:        "0.2.2",
+			Version:        "0.2.3",
 			PoolSize:       "50 GB",
 			NetworkLimit:   "50 GB",
 			StatsReporting: "OFF",
