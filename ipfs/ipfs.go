@@ -53,6 +53,14 @@ func Init() {
 		log.Fatal(err)
 	}
 	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
+
+	peers := []string{
+		// Arken Bootstrapper node.
+		"/dns4/link.arken.io/tcp/4001/ipfs/QmP8krSfWWHLNL2eah6E1hr6TzoaGMEVRw2Fooy5og1Wpj",
+		"/dns4/relay.arken.io/tcp/4001/ipfs/12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm",
+	}
+
+	go connectToPeers(ctx, ipfs, peers)
 }
 
 // SpawnNode creates and tests and IPFS node for public reachability.
@@ -109,7 +117,7 @@ func setAutoRelay(relay bool, path string) (err error) {
 	cfg.Swarm.EnableAutoRelay = relay
 	if relay {
 		cfg.Addresses.Announce = []string{
-			"/dns4/link.arken.io/tcp/4001/ipfs/QmP8krSfWWHLNL2eah6E1hr6TzoaGMEVRw2Fooy5og1Wpj/p2p-circuit/p2p/" + cfg.Identity.PeerID}
+			"/dns4/relay.arken.io/tcp/4001/ipfs/12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm/p2p-circuit/p2p/" + cfg.Identity.PeerID}
 	}
 
 	configFilename, err := config.Filename(path)
@@ -284,6 +292,7 @@ func createRepo(ctx context.Context, path string) (string, error) {
 	bootstrapNodes := []string{
 		// Arken Bootstrapper node.
 		"/dns4/link.arken.io/tcp/4001/ipfs/QmP8krSfWWHLNL2eah6E1hr6TzoaGMEVRw2Fooy5og1Wpj",
+		"/dns4/relay.arken.io/tcp/4001/ipfs/12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm",
 	}
 	cfg.Bootstrap = bootstrapNodes
 	cfg.Swarm.ConnMgr.HighWater = 1200
