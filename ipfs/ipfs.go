@@ -89,7 +89,7 @@ func spawnNode(path string) (ctx context.Context, api icore.CoreAPI, err error) 
 	if !public {
 		cancel()
 		fmt.Printf("[Node unable to be reached by network.]\n")
-		fmt.Printf("[Recreating using Circut Relay System.]\n")
+		fmt.Printf("[Recreating using Circuit Relay System.]\n")
 
 		setAutoRelay(true, path)
 
@@ -117,7 +117,10 @@ func setAutoRelay(relay bool, path string) (err error) {
 	cfg.Swarm.EnableAutoRelay = relay
 	if relay {
 		cfg.Addresses.Announce = []string{
-			"/dns4/relay.arken.io/tcp/4001/ipfs/12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm/p2p-circuit/p2p/" + cfg.Identity.PeerID}
+			"/dns4/relay.arken.io/tcp/4001/ipfs/12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm/p2p-circuit/p2p/" + cfg.Identity.PeerID,
+		}
+	} else {
+		cfg.Addresses.Announce = []string{}
 	}
 
 	configFilename, err := config.Filename(path)
