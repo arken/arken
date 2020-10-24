@@ -23,9 +23,9 @@ import (
 
 	"github.com/ipfs/go-ipfs/core"
 	"github.com/ipfs/go-ipfs/core/coreapi"
-	"github.com/ipfs/go-ipfs/peering"
 	"github.com/ipfs/go-ipfs/plugin/loader" // This package is needed so that all the preloaded plugins are loaded automatically
 	"github.com/ipfs/go-ipfs/repo/fsrepo"
+	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/peer"
 )
 
@@ -34,7 +34,6 @@ var (
 	node   *core.IpfsNode
 	ctx    context.Context
 	cancel context.CancelFunc
-	ps     *peering.PeeringService
 	// AtRiskThreshhold is the number of peers for a piece
 	// of data to be backed up on to be considered safe.
 	AtRiskThreshhold int
@@ -56,8 +55,6 @@ func Init() {
 	}
 	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
 
-	ps = peering.NewPeeringService(node.PeerHost)
-
 	peers := []string{
 		// Arken Bootstrapper node.
 		"/dns4/link.arken.io/tcp/4001/ipfs/QmP8krSfWWHLNL2eah6E1hr6TzoaGMEVRw2Fooy5og1Wpj",
@@ -65,12 +62,16 @@ func Init() {
 	}
 	go connectToPeers(ctx, ipfs, peers)
 
-	addr, err := ma.NewMultiaddr("/dns4/relay.arken.io/tcp/4001/ipfs/12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm")
-	if err != nil {
-		log.Fatal(err)
-	}
-	ps.AddPeer(peer.AddrInfo{ID: "12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm", Addrs: []ma.Multiaddr{addr}})
-	ps.Start()
+	go func() {
+		for {
+			addrs, _ := peer.AddrInfoToP2pAddrs(host.InfoFromHost(node.PeerHost))
+			fmt.Println("Address")
+			fmt.Println(addrs)
+			fmt.Println("Announce")
+			fmt.Println(cfg.Addresses.Announce)
+			time.Sleep(10 * time.Second)
+		}
+	}()
 
 }
 
@@ -128,7 +129,7 @@ func setAutoRelay(relay bool, path string) (err error) {
 	cfg.Swarm.EnableAutoRelay = relay
 	if relay {
 		cfg.Addresses.Announce = []string{
-			"/dns4/relay.arken.io/tcp/4001/ipfs/12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm/p2p-circuit/p2p/" + cfg.Identity.PeerID,
+			"/dns4/relay.arken.io/tcp/4001/p2p/12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm/p2p-circuit/p2p/" + cfg.Identity.PeerID,
 		}
 	} else {
 		cfg.Addresses.Announce = []string{}
