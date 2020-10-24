@@ -25,7 +25,6 @@ import (
 	"github.com/ipfs/go-ipfs/core/coreapi"
 	"github.com/ipfs/go-ipfs/plugin/loader" // This package is needed so that all the preloaded plugins are loaded automatically
 	"github.com/ipfs/go-ipfs/repo/fsrepo"
-	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/peer"
 )
 
@@ -61,17 +60,6 @@ func Init() {
 		"/dns4/relay.arken.io/tcp/4001/ipfs/12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm",
 	}
 	go connectToPeers(ctx, ipfs, peers)
-
-	go func() {
-		for {
-			addrs, _ := peer.AddrInfoToP2pAddrs(host.InfoFromHost(node.PeerHost))
-			fmt.Println("Address")
-			fmt.Println(addrs)
-			fmt.Println("Announce")
-			fmt.Println(cfg.Addresses.Announce)
-			time.Sleep(10 * time.Second)
-		}
-	}()
 
 }
 
