@@ -16,6 +16,7 @@ import (
 	config "github.com/ipfs/go-ipfs-config"
 	serialize "github.com/ipfs/go-ipfs-config/serialize"
 	libp2p "github.com/ipfs/go-ipfs/core/node/libp2p"
+	"github.com/ipfs/go-ipfs/peering"
 	migrate "github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	icore "github.com/ipfs/interface-go-ipfs-core"
 	peerstore "github.com/libp2p/go-libp2p-peerstore"
@@ -29,13 +30,14 @@ import (
 )
 
 var (
-	ipfs   icore.CoreAPI
-	node   *core.IpfsNode
-	ctx    context.Context
-	cancel context.CancelFunc
 	// AtRiskThreshhold is the number of peers for a piece
 	// of data to be backed up on to be considered safe.
 	AtRiskThreshhold int
+	ps               *peering.PeeringService
+	ipfs             icore.CoreAPI
+	node             *core.IpfsNode
+	ctx              context.Context
+	cancel           context.CancelFunc
 )
 
 // Init starts the IPFS subsystem.
@@ -69,7 +71,7 @@ func spawnNode(path string) (ctx context.Context, api icore.CoreAPI, err error) 
 	ctx, cancel = context.WithCancel(context.Background())
 
 	fmt.Printf("\n[Creating embedded IPFS Node]\n")
-	err = setAutoRelay(false, path)
+	err = setRelay(false, path)
 	if err != nil && err.Error() != "ipfs not initialized, please run 'ipfs init'" {
 		return ctx, api, err
 	}
@@ -91,7 +93,7 @@ func spawnNode(path string) (ctx context.Context, api icore.CoreAPI, err error) 
 		fmt.Printf("[Node unable to be reached by network.]\n")
 		fmt.Printf("[Recreating using Circuit Relay System.]\n")
 
-		setAutoRelay(true, path)
+		setRelay(true, path)
 
 		// Wait for port to free
 		time.Sleep(30 * time.Second)
@@ -103,18 +105,27 @@ func spawnNode(path string) (ctx context.Context, api icore.CoreAPI, err error) 
 			return ctx, api, err
 		}
 		fmt.Printf("[Node Re-Created Sucessfully]\n")
+
+		ps = peering.NewPeeringService(node.PeerHost)
+		addr, err := ma.NewMultiaddr("/dns4/relay.arken.io/tcp/4001/ipfs/12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm")
+		if err != nil {
+			log.Fatal(err)
+		}
+		ps.AddPeer(peer.AddrInfo{ID: "12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm", Addrs: []ma.Multiaddr{addr}})
+		ps.Start()
+
 	} else {
 		fmt.Printf("[Arken Node is Publicly Reachable with NAT]\n")
 	}
 	return ctx, api, nil
 }
 
-func setAutoRelay(relay bool, path string) (err error) {
+func setRelay(relay bool, path string) (err error) {
 	cfg, err := fsrepo.ConfigAt(path)
 	if err != nil {
 		return err
 	}
-	cfg.Swarm.EnableAutoRelay = relay
+	cfg.Swarm.EnableAutoRelay = false
 	if relay {
 		cfg.Addresses.Announce = []string{
 			"/dns4/relay.arken.io/tcp/4001/p2p/12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm/p2p-circuit/p2p/" + cfg.Identity.PeerID,
