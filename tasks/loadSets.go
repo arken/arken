@@ -15,7 +15,11 @@ import (
 func loadSets(keySets []config.KeySet, new chan database.FileKey, output chan database.FileKey, settings chan string) {
 	// Run LoadSets every hour.
 	for {
+		for config.Flags.IndexingSets {
+			time.Sleep(15 * time.Minute)
+		}
 		fmt.Println("\n[Indexing & Updating Keysets]")
+		config.Flags.IndexingSets = true
 		err := keysets.LoadSets(keySets)
 		if err != nil {
 			log.Fatal(err)
@@ -37,6 +41,7 @@ func loadSets(keySets []config.KeySet, new chan database.FileKey, output chan da
 		}
 
 		fmt.Println("[Finished Indexing & Updating Keysets]")
+		config.Flags.IndexingSets = false
 		time.Sleep(1 * time.Hour)
 	}
 }

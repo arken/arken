@@ -44,9 +44,17 @@ type stats struct {
 	Email    string
 }
 
+// Status defines where the program looks to tell if other processes are
+// currently running
+type Status struct {
+	IndexingSets bool
+}
+
 var (
 	// Global is the configuration struct for the application.
 	Global Config
+	// Flags is the live configuration of currently running modules.
+	Flags Status
 	// Disk is the configuration interface for the disk utilities.
 	Disk DiskInfo
 	path string

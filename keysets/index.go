@@ -36,7 +36,7 @@ func Index(path string, new chan database.FileKey, output chan database.FileKey,
 	}
 	hash, err := database.GetCommit(db)
 	if err != nil && err.Error() == "entry not found" {
-		err = indexFull(db, path, new, output)
+		err = IndexFull(db, path, new, output)
 		if err != nil {
 			return err
 		}
@@ -56,7 +56,7 @@ func Index(path string, new chan database.FileKey, output chan database.FileKey,
 
 // IndexFull walks through the repository structure and extracts file identifiers from found
 // .ks files.
-func indexFull(db *sql.DB, rootPath string, new chan database.FileKey, output chan database.FileKey) (err error) {
+func IndexFull(db *sql.DB, rootPath string, new chan database.FileKey, output chan database.FileKey) (err error) {
 	fileTemplate := database.FileKey{
 		Size:   -1,
 		Status: "added",
@@ -130,37 +130,60 @@ func indexPatch(db *sql.DB, path string, commitHash plumbing.Hash, new chan<- da
 		return err
 	}
 
-	fileTemplate := database.FileKey{
-		Size:   -1,
-		Status: "added",
-		KeySet: filepath.Base(path)}
+	entries := make(map[string]database.FileKey)
 
 	lines := strings.Split(diff.String(), "\n")
 	for i := range lines {
+		fileTemplate := database.FileKey{
+			Size:   -1,
+			Status: "added",
+			KeySet: filepath.Base(path)}
+
 		if strings.HasPrefix(lines[i], "+Qm") {
 			data := strings.Fields(lines[i])
-			fmt.Printf("Added: %s\n", data)
 
 			// Set custom file values.
 			fileTemplate.ID = strings.TrimPrefix(data[0], "+")
 			fileTemplate.Name = data[1]
-			output <- fileTemplate
-			_, err := database.Get(db, fileTemplate.ID)
-			if err != nil && err.Error() == "entry not found" {
-				new <- fileTemplate
+
+			entry, ok := entries[fileTemplate.ID]
+			if !ok {
+				entries[fileTemplate.ID] = fileTemplate
+			} else if entry.Status == "removed" {
+				delete(entries, entry.ID)
 			}
+
 		}
 		if strings.HasPrefix(lines[i], "-Qm") {
 			data := strings.Fields(lines[i])
-			fmt.Printf("Removed: %s\n", data)
 
 			// Set custom file values.
 			fileTemplate.ID = strings.TrimPrefix(data[0], "-")
 			fileTemplate.Name = data[1]
 			fileTemplate.Status = "removed"
-			output <- fileTemplate
-		}
 
+			entry, ok := entries[fileTemplate.ID]
+			if !ok {
+				entries[fileTemplate.ID] = fileTemplate
+			} else if entry.Status == "added" {
+				delete(entries, entry.ID)
+			}
+		}
 	}
+	for _, entry := range entries {
+		if entry.Status == "added" {
+			fmt.Printf("Added: %s\n", entry.ID)
+			output <- entry
+			_, err := database.Get(db, entry.ID)
+			if err != nil && err.Error() == "entry not found" {
+				new <- entry
+			}
+		}
+		if entry.Status == "removed" {
+			fmt.Printf("Removed: %s\n", entry.ID)
+			output <- entry
+		}
+	}
+
 	return nil
 }

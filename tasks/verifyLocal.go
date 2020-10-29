@@ -10,7 +10,8 @@ import (
 // still present on the system.
 func VerifyLocal() {
 	for {
+		time.Sleep(1 * time.Hour)
 		engine.VerifyLocal()
-		time.Sleep(7 * 24 * time.Hour)
+		time.Sleep(7 * 23 * time.Hour)
 	}
 }

@@ -135,14 +135,16 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 			}
 
 		default:
-			if timeout > 30 && db != nil {
+			if timeout > 75 && db != nil {
 				ipfs.GC()
 				db.Close()
 				db = nil
-			} else if timeout > 30 {
+			} else if timeout > 75 {
 				time.Sleep(30 * time.Second)
-			} else if timeout > 15 {
+			} else if timeout > 60 {
 				time.Sleep(5 * time.Second)
+			} else if timeout > 30 {
+				time.Sleep(200 * time.Millisecond)
 				timeout++
 			} else {
 				timeout++

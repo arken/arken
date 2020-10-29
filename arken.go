@@ -29,9 +29,6 @@ func main() {
 		go tasks.StatsReporting()
 	}
 
-	// Verify Locally Pinned Files and Re-Pin if lost.
-	go tasks.VerifyLocal()
-
 	// Begin the main Arken process.
 	tasks.Main()
 }

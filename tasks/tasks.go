@@ -44,6 +44,12 @@ func Main() {
 	// Initialize Database Reader
 	go databaseReader(remote, output)
 
+	// Initialize Database-Keyset Verifacation Test
+	go verifyDB(config.Keysets, new, output)
+
+	// Verify Locally Pinned Files and Re-Pin if lost.
+	go VerifyLocal()
+
 	err = engine.Run(new, remote, output)
 	if err != nil {
 		log.Fatal(err)
