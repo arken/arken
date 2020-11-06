@@ -16,14 +16,16 @@ import (
 func VerifyLocal() {
 	// Copy Database because we can't guarentee this won't run as something is added.
 	copyName := filepath.Join(filepath.Dir(config.Global.Database.Path), "verify.db")
-	database.Copy(config.Global.Database.Path, copyName)
+	err := database.Copy(config.Global.Database.Path, copyName)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Open Copy Database
 	read, err := database.Open(copyName)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer read.Close()
 
 	input := make(chan database.FileKey)
 	// Get all will read db entries and put in queue for workers.
@@ -36,5 +38,13 @@ func VerifyLocal() {
 			log.Fatal(err)
 		}
 	}
-	os.Remove(copyName)
+
+	err = read.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = os.Remove(copyName)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

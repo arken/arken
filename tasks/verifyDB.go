@@ -26,13 +26,11 @@ func verifyDB(keySets []config.KeySet, new chan database.FileKey, output chan da
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer os.Remove(copyName)
 
 		db, err := database.Open(copyName)
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer db.Close()
 
 		for keySet := range keySets {
 			location := filepath.Join(config.Global.Sources.Repositories, filepath.Base(keySets[keySet].URL))
@@ -50,6 +48,14 @@ func verifyDB(keySets []config.KeySet, new chan database.FileKey, output chan da
 		}
 
 		fmt.Println("[Finished Indexing & Updating Keysets]")
+		err = db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = os.Remove(copyName)
+		if err != nil {
+			log.Fatal(err)
+		}
 		config.Flags.IndexingSets = false
 		time.Sleep(7 * 24 * time.Hour)
 	}

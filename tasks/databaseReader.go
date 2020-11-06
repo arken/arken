@@ -37,7 +37,10 @@ func databaseReader(remote chan database.FileKey, output chan database.FileKey) 
 			output <- entry
 		}
 
-		os.Remove(copyName)
+		err = os.Remove(copyName)
+		if err != nil {
+			log.Fatal(err)
+		}
 		fmt.Println("\n[Finished Data Rebalance]")
 
 		time.Sleep(1 * time.Hour)
