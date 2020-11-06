@@ -41,13 +41,13 @@ func verifyDB(keySets []config.KeySet, new chan database.FileKey, output chan da
 			output <- lighthouse
 
 			fmt.Printf("Verifying: %s\n", filepath.Base(keySets[keySet].URL))
-			err = keysets.IndexFull(db, location, new, output)
+			err = keysets.IndexFull(db, location, nil, output)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 
-		fmt.Println("[Finished Indexing & Updating Keysets]")
+		fmt.Println("[Finished Verifying Keysets]")
 		err = db.Close()
 		if err != nil {
 			log.Fatal(err)

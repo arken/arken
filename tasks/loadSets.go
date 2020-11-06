@@ -22,21 +22,21 @@ func loadSets(keySets []config.KeySet, new chan database.FileKey, output chan da
 		config.Flags.IndexingSets = true
 		err := keysets.LoadSets(keySets)
 		if err != nil {
-			log.Fatal(err)
-		}
+			log.Println(err)
+		} else {
+			for keySet := range keySets {
+				location := filepath.Join(config.Global.Sources.Repositories, filepath.Base(keySets[keySet].URL))
+				lighthouse, err := keysets.ConfigLighthouse(keySets[keySet].LightHouseFileID, keySets[keySet].URL)
+				if err != nil {
+					log.Fatal(err)
+				}
+				output <- lighthouse
 
-		for keySet := range keySets {
-			location := filepath.Join(config.Global.Sources.Repositories, filepath.Base(keySets[keySet].URL))
-			lighthouse, err := keysets.ConfigLighthouse(keySets[keySet].LightHouseFileID, keySets[keySet].URL)
-			if err != nil {
-				log.Fatal(err)
-			}
-			output <- lighthouse
-
-			fmt.Printf("Indexing: %s\n", filepath.Base(keySets[keySet].URL))
-			err = keysets.Index(location, new, output, settings)
-			if err != nil {
-				log.Fatal(err)
+				fmt.Printf("Indexing: %s\n", filepath.Base(keySets[keySet].URL))
+				err = keysets.Index(location, new, output, settings)
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 

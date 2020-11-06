@@ -40,5 +40,5 @@ func CheckIn(location string, input NodeData) (err error) {
 		return errors.New("different arkstat back from server")
 	}
 
-	return
+	return nil
 }

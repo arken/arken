@@ -89,7 +89,9 @@ func IndexFull(db *sql.DB, rootPath string, new chan database.FileKey, output ch
 				if err != nil && err.Error() == "entry not found" {
 					// Send parsed file to engine.
 					output <- fileTemplate
-					new <- fileTemplate
+					if new != nil {
+						new <- fileTemplate
+					}
 				} else if err == nil {
 					output <- entry
 				}
@@ -99,7 +101,10 @@ func IndexFull(db *sql.DB, rootPath string, new chan database.FileKey, output ch
 				return err
 			}
 			// Close the file after fully parsed.
-			file.Close()
+			err = file.Close()
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	})
