@@ -1,7 +1,7 @@
 # Dockerfile References: https://docs.docker.com/engine/reference/builder/
 
 # Start from the latest golang base image
-FROM golang:1.15.2-alpine as builder
+FROM golang:1.15.5-alpine as builder
 
 # Add Maintainer Info
 LABEL maintainer="Alec Scott <alecbcs@github.com>"
