@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 )
 
 // NodeData is a struct of data that should be send to the arkstat server.
@@ -24,7 +25,8 @@ func CheckIn(location string, input NodeData) (err error) {
 		return err
 	}
 
-	resp, err := http.Post(location, "application/json", bytes.NewBuffer(bytesRepresentation))
+	client := http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Post(location, "application/json", bytes.NewBuffer(bytesRepresentation))
 	if err != nil {
 		return err
 	}
@@ -40,5 +42,7 @@ func CheckIn(location string, input NodeData) (err error) {
 		return errors.New("different arkstat back from server")
 	}
 
-	return nil
+	err = resp.Body.Close()
+	client.CloseIdleConnections()
+	return err
 }
