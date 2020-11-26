@@ -129,11 +129,10 @@ func setRelay(relay bool, path string) (err error) {
 		cfg.Addresses.Announce = []string{
 			"/dns4/relay.arken.io/tcp/4001/p2p/12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm/p2p-circuit/p2p/" + cfg.Identity.PeerID,
 		}
-		cfg.Routing.Type = "dhtclient"
 	} else {
 		cfg.Addresses.Announce = []string{}
-		cfg.Routing.Type = "dhtserver"
 	}
+	cfg.Routing.Type = "dhtserver"
 
 	configFilename, err := config.Filename(path)
 	if err != nil {
