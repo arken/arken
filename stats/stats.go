@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
-	"time"
 
 	"github.com/arkenproject/arken/config"
 	"github.com/arkenproject/arken/ipfs"
@@ -35,9 +34,6 @@ func Report(keysets []config.KeySet) (err error) {
 	}
 
 	for keyset := range keysets {
-		for keysets[keyset].LightHouseFileID == "" {
-			time.Sleep(30 * time.Second)
-		}
 		if keysets[keyset].StatsURL != "" {
 			fmt.Printf("[Sending Stats Info for: %s]\n", filepath.Base(keysets[keyset].URL))
 			err := CheckIn(keysets[keyset].StatsURL, data)

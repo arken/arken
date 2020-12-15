@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"log"
+	"strings"
 
 	"github.com/arkenproject/arken/config"
 	"github.com/arkenproject/arken/database"
@@ -49,6 +50,11 @@ func Main() {
 
 	// Verify Locally Pinned Files and Re-Pin if lost.
 	go VerifyLocal()
+
+	// Launch Stats Reporting if enabled in the config.
+	if strings.ToLower(config.Global.General.StatsReporting) == "on" {
+		go StatsReporting()
+	}
 
 	err = engine.Run(new, remote, output)
 	if err != nil {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/arkenproject/arken/tasks"
 
@@ -23,11 +22,6 @@ func main() {
 
 	fmt.Println("Arken is now in [System Startup]")
 	ipfs.Init()
-
-	// Launch Stats Reporting if enabled in the config.
-	if strings.ToLower(config.Global.General.StatsReporting) == "on" {
-		go tasks.StatsReporting()
-	}
 
 	// Begin the main Arken process.
 	tasks.Main()
