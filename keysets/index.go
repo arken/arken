@@ -12,6 +12,7 @@ import (
 	"github.com/arkenproject/arken/database"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/ipfs/go-cid"
 )
 
 // Index extracts the file identifiers from the keyset provided.
@@ -139,16 +140,26 @@ func indexPatch(db *sql.DB, path string, commitHash plumbing.Hash, new chan<- da
 
 	lines := strings.Split(diff.String(), "\n")
 	for i := range lines {
+		data := strings.Fields(lines[i])
+		if len(data) <= 1 {
+			continue
+		}
+
+		id := strings.TrimPrefix(strings.TrimPrefix(data[0], "+"), "-")
+		_, err := cid.Decode(id)
+		if err != nil {
+			continue
+		}
+
 		fileTemplate := database.FileKey{
 			Size:   -1,
 			Status: "added",
 			KeySet: filepath.Base(path)}
 
-		if strings.HasPrefix(lines[i], "+Qm") {
-			data := strings.Fields(lines[i])
+		if strings.HasPrefix(lines[i], "+") {
 
 			// Set custom file values.
-			fileTemplate.ID = strings.TrimPrefix(data[0], "+")
+			fileTemplate.ID = id
 			fileTemplate.Name = data[1]
 
 			entry, ok := entries[fileTemplate.ID]
@@ -159,11 +170,10 @@ func indexPatch(db *sql.DB, path string, commitHash plumbing.Hash, new chan<- da
 			}
 
 		}
-		if strings.HasPrefix(lines[i], "-Qm") {
-			data := strings.Fields(lines[i])
+		if strings.HasPrefix(lines[i], "-") {
 
 			// Set custom file values.
-			fileTemplate.ID = strings.TrimPrefix(data[0], "-")
+			fileTemplate.ID = id
 			fileTemplate.Name = data[1]
 			fileTemplate.Status = "removed"
 
@@ -177,7 +187,7 @@ func indexPatch(db *sql.DB, path string, commitHash plumbing.Hash, new chan<- da
 	}
 	for _, entry := range entries {
 		if entry.Status == "added" {
-			fmt.Printf("Added: %s\n", entry.ID)
+			fmt.Printf("Added: %s  %s\n", entry.ID, entry.Name)
 			output <- entry
 			_, err := database.Get(db, entry.ID)
 			if err != nil && err.Error() == "entry not found" {
@@ -185,7 +195,7 @@ func indexPatch(db *sql.DB, path string, commitHash plumbing.Hash, new chan<- da
 			}
 		}
 		if entry.Status == "removed" {
-			fmt.Printf("Removed: %s\n", entry.ID)
+			fmt.Printf("Removed: %s  %s\n", entry.ID, entry.Name)
 			output <- entry
 		}
 	}
