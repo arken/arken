@@ -10,18 +10,18 @@ import (
 
 // TransactionCommit adds a transaction to the database table.
 func TransactionCommit(db *sql.DB, action string, file FileKey) (err error) {
-	time.Sleep(1 * time.Second)
 	stmt, err := db.Prepare(
 		`INSERT INTO transactions(
 			time,
 			fileID,
 			action,
 			size
-		) VALUES(datetime('now'),?,?,?);`)
+		) VALUES(?,?,?,?);`)
 	if err != nil {
 		log.Fatal(err)
 	}
 	_, err = stmt.Exec(
+		time.Now(),
 		file.ID,
 		action,
 		file.Size)
