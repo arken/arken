@@ -78,7 +78,7 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 				switch {
 				case entry.Status == "removed":
 					ipfs.Unpin(entry.ID)
-					ipfs.AdjustRepoSize(0 - int64(entry.Size))
+					ipfs.AdjustRepoSize(0 - int64(prev.Size))
 					database.TransactionCommit(db, "removed", entry)
 					database.Update(db, entry)
 					continue
@@ -136,17 +136,19 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 
 		default:
 			if timeout > 75 && db != nil {
-				ipfs.GC()
 				db.Close()
 				db = nil
+				ipfs.GC()
 			} else if timeout > 75 {
 				time.Sleep(30 * time.Second)
 			} else if timeout > 60 {
 				time.Sleep(5 * time.Second)
+				timeout++
 			} else if timeout > 30 {
 				time.Sleep(200 * time.Millisecond)
 				timeout++
 			} else {
+				time.Sleep(5 * time.Millisecond)
 				timeout++
 			}
 		}

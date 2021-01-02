@@ -2,6 +2,7 @@ package keysets
 
 import (
 	"bufio"
+	"bytes"
 	"database/sql"
 	"fmt"
 	"os"
@@ -112,7 +113,7 @@ func IndexFull(db *sql.DB, rootPath string, new chan database.FileKey, output ch
 	return err
 }
 
-func indexPatch(db *sql.DB, path string, commitHash plumbing.Hash, new chan<- database.FileKey, output chan<- database.FileKey) (err error) {
+func indexPatch(db *sql.DB, path string, commitHash plumbing.Hash, newFiles chan<- database.FileKey, output chan<- database.FileKey) (err error) {
 	r, err := git.PlainOpen(path)
 	if err != nil {
 		return err
@@ -136,9 +137,15 @@ func indexPatch(db *sql.DB, path string, commitHash plumbing.Hash, new chan<- da
 		return err
 	}
 
+	buf := new(bytes.Buffer)
+	err = diff.Encode(buf)
+	if err != nil {
+		return err
+	}
+
 	entries := make(map[string]database.FileKey)
 
-	lines := strings.Split(diff.String(), "\n")
+	lines := strings.Split(buf.String(), "\n")
 	for i := range lines {
 		data := strings.Fields(lines[i])
 		if len(data) <= 1 {
@@ -191,7 +198,7 @@ func indexPatch(db *sql.DB, path string, commitHash plumbing.Hash, new chan<- da
 			output <- entry
 			_, err := database.Get(db, entry.ID)
 			if err != nil && err.Error() == "entry not found" {
-				new <- entry
+				newFiles <- entry
 			}
 		}
 		if entry.Status == "removed" {
