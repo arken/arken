@@ -47,6 +47,8 @@ func GetAll(db *sql.DB, statusPattern string, keySet string, output chan FileKey
 		var rows *sql.Rows
 		if keySet == "" {
 			rows, err = db.Query("SELECT * FROM keys WHERE status = ?", statuses[status])
+		} else if keySet == "_" {
+			rows, err = db.Query("SELECT * FROM keys WHERE status = ? AND keyset = ?", statuses[status], "")
 		} else {
 			rows, err = db.Query("SELECT * FROM keys WHERE status = ? AND keyset = ?", statuses[status], keySet)
 		}

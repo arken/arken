@@ -1,8 +1,10 @@
 package ipfs
 
 import (
+	"log"
 	"strings"
 
+	"github.com/arkenproject/arken/database"
 	"github.com/ipfs/go-ipfs/core/corerepo"
 	"github.com/ipfs/interface-go-ipfs-core/options"
 	icorepath "github.com/ipfs/interface-go-ipfs-core/path"
@@ -20,6 +22,36 @@ func Unpin(hash string) (err error) {
 		return err
 	}
 	return nil
+}
+
+// LsPin returns a list of FileKeys that are pinned on the IPFS instance.
+func LsPin(output chan<- database.FileKey) {
+	pins, err := ipfs.Pin().Ls(ctx, func(input *options.PinLsSettings) error {
+		input.Type = "recursive"
+		return nil
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	for pin := range pins {
+		cid := pin.Path().Cid().String()
+		size, err := GetSize(cid)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		fileTemplate := database.FileKey{
+			ID:           cid,
+			Size:         size,
+			Status:       "local",
+			Replications: -1,
+		}
+
+		output <- fileTemplate
+	}
+
+	close(output)
 }
 
 // GC runs a garbage collection scan on the IPFS node.

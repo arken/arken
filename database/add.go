@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"log"
+	"time"
 )
 
 // Add inserts an entry into the database if it doesn't exist already.
@@ -34,7 +35,7 @@ func Insert(db *sql.DB, entry FileKey) {
 			keyset,
 			modified,
 			replications
-		) VALUES(?,?,?,?,?,datetime('now'),?);`)
+		) VALUES(?,?,?,?,?,?,?);`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,6 +45,7 @@ func Insert(db *sql.DB, entry FileKey) {
 		entry.Size,
 		entry.Status,
 		entry.KeySet,
+		time.Now(),
 		entry.Replications)
 
 	if err != nil {
@@ -55,12 +57,13 @@ func Insert(db *sql.DB, entry FileKey) {
 func UpdateTime(db *sql.DB, entry FileKey) (err error) {
 	stmt, err := db.Prepare(
 		`UPDATE keys SET
-			modified = datetime('now')
+			modified = ?
 			WHERE id = ?;`)
 	if err != nil {
 		return err
 	}
 	_, err = stmt.Exec(
+		time.Now(),
 		entry.ID)
 
 	return err

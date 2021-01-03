@@ -2,6 +2,7 @@ package keysets
 
 import (
 	"path/filepath"
+	"time"
 
 	"github.com/arkenproject/arken/database"
 	"github.com/arkenproject/arken/ipfs"
@@ -18,8 +19,9 @@ func ConfigLighthouse(hash string, url string) (result database.FileKey, err err
 	}
 
 	return database.FileKey{
-		ID:     hash,
-		Status: "local",
-		Name:   "lighthouse",
-		KeySet: ksName}, nil
+		ID:       hash,
+		Status:   "local",
+		Name:     "lighthouse",
+		Modified: time.Now(),
+		KeySet:   ksName}, nil
 }

@@ -88,7 +88,11 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 					database.Update(db, entry)
 					continue
 
-				// Cover "added", "local", "remote"
+				case entry.Status == "added":
+					prev.Name = entry.Name
+					database.Update(db, entry)
+
+				// Cover "local", "remote"
 				default:
 					database.UpdateTime(db, entry)
 					continue
@@ -96,6 +100,7 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 			case prev.Status == "remote":
 				switch {
 				case entry.Status == "local":
+					entry.Name = prev.Name
 					database.Update(db, entry)
 					database.TransactionCommit(db, "added", entry)
 					continue
