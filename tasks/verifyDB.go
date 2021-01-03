@@ -50,7 +50,7 @@ func verifyDB(keySets []config.KeySet, new chan database.FileKey, output chan da
 			go database.GetAll(db, "local+remote", lighthouse.KeySet, remotes)
 
 			for entry := range remotes {
-				if !entry.Modified.Before(lighthouse.Modified) {
+				if !entry.Modified.Before(lighthouse.Modified) && entry.Name != "lighthouse" {
 					entry.Status = "removed"
 					output <- entry
 					fmt.Printf("Removed: %s  %s\n", entry.ID, entry.Name)
