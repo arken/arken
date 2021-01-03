@@ -62,7 +62,7 @@ func GetCommit(db *sql.DB) (result string, err error) {
 	return result, nil
 }
 
-// UpdateTime sets the last seen time of a file to now in the database.
+// updateCommit updates the checkpoint transaction of the entry in the DB
 func updateCommit(db *sql.DB, hash string) (err error) {
 	commit := "commit"
 	stmt, err := db.Prepare(
