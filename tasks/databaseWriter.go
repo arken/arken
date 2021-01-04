@@ -77,7 +77,11 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 			case prev.Status == "local":
 				switch {
 				case entry.Status == "removed":
-					ipfs.Unpin(entry.ID)
+					err := ipfs.Unpin(entry.ID)
+					if err != nil {
+						database.Update(db, prev)
+						continue
+					}
 					ipfs.AdjustRepoSize(0 - int64(prev.Size))
 					database.TransactionCommit(db, "removed", entry)
 					database.Update(db, entry)
@@ -122,7 +126,11 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 					continue
 
 				case entry.Status == "local":
-					ipfs.Unpin(entry.ID)
+					err := ipfs.Unpin(entry.ID)
+					if err != nil {
+						database.Update(db, entry)
+						continue
+					}
 					ipfs.AdjustRepoSize(0 - int64(entry.Size))
 					database.TransactionCommit(db, "removed", entry)
 					database.Delete(db, entry.ID)
