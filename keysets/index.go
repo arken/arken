@@ -47,7 +47,12 @@ func Index(path string, new chan database.FileKey, output chan database.FileKey,
 			hashCommit := plumbing.NewHash(hash)
 			err = indexPatch(db, path, hashCommit, new, output)
 			if err != nil {
-				return err
+				if err.Error() == "object not found" {
+					err = IndexFull(db, path, new, output)
+				}
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
