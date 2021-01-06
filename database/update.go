@@ -2,12 +2,11 @@ package database
 
 import (
 	"database/sql"
-	"log"
 	"time"
 )
 
 // Update changes a file's status in the database.
-func Update(db *sql.DB, key FileKey) {
+func Update(db *sql.DB, key FileKey) error {
 	stmt, err := db.Prepare(
 		`UPDATE keys SET
 			Status = ?,
@@ -16,16 +15,14 @@ func Update(db *sql.DB, key FileKey) {
 			Modified = ?
 			WHERE id = ?;`)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	_, err = stmt.Exec(
 		key.Status,
 		key.Replications,
 		key.Size,
-		time.Now(),
+		time.Now().UTC(),
 		key.ID)
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	return err
 }

@@ -16,7 +16,7 @@ import (
 func verifyDB(keySets []config.KeySet, new chan database.FileKey, output chan database.FileKey) {
 	// Run Verify After Indexing has Finished
 	for {
-		time.Sleep(1 * time.Minute)
+		time.Sleep(30 * time.Second)
 		for config.Flags.IndexingSets {
 			time.Sleep(1 * time.Hour)
 		}
@@ -29,50 +29,59 @@ func verifyDB(keySets []config.KeySet, new chan database.FileKey, output chan da
 		for entry := range nodeFiles {
 			output <- entry
 		}
-		// Wait for Writer to Finish Processing Pins
-		for len(output) > 0 {
-			time.Sleep(1 * time.Second)
-		}
 
-		copyName := filepath.Join(filepath.Dir(config.Global.Database.Path), "verifyKeyset.db")
-		err := database.Copy(config.Global.Database.Path, copyName)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		db, err := database.Open(copyName)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		for keySet := range keySets {
-			fmt.Printf("Verifying: %s\n", filepath.Base(keySets[keySet].URL))
-
-			location := filepath.Join(config.Global.Sources.Repositories, filepath.Base(keySets[keySet].URL))
-			err = keysets.IndexFull(db, location, nil, output)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			lighthouse, err := database.Get(db, keySets[keySet].LightHouseFileID)
+		// Bring the modified date past the lighthouse file for all files still within a keyset.
+		for _, keySet := range keySets {
+			location := filepath.Join(config.Global.Sources.Repositories, filepath.Base(keySet.URL))
+			lighthouse, err := keysets.ConfigLighthouse(keySet.LightHouseFileID, keySet.URL)
 			if err != nil {
 				log.Fatal(err)
 			}
 			output <- lighthouse
 
-			remotes := make(chan database.FileKey)
-			go database.GetAll(db, "local+remote", lighthouse.KeySet, remotes)
+			err = keysets.IndexFull(location, output)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 
-			for entry := range remotes {
-				if lighthouse.Modified.After(entry.Modified) && entry.Name != "lighthouse" {
+		// Wait for Writer to Finish Processing Pins
+		for len(output) > 0 {
+			time.Sleep(1 * time.Second)
+		}
+
+		// Copy the Database with the updated modified times.
+		copyName := filepath.Join(filepath.Dir(config.Global.Database.Path), "verify.db")
+		err := database.Copy(config.Global.Database.Path, copyName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		db, err := database.Open(copyName)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Check each keyset for files that were not touched during the index
+		for _, keySet := range keySets {
+			lighthouse, err := database.Get(db, keySet.LightHouseFileID)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			files := make(chan database.FileKey)
+			go database.GetAll(db, "local+remote", lighthouse.KeySet, files)
+
+			for entry := range files {
+				if entry.Modified.Before(lighthouse.Modified) {
 					entry.Status = "removed"
 					output <- entry
 					fmt.Printf("Removed: %s  %s\n", entry.ID, entry.Name)
 				}
 			}
 		}
+
+		// Remove files found by IPFS with no owning Keyset.
 		orphans := make(chan database.FileKey)
-		// Remove Orphaned Files without a Keyset.
 		go database.GetAll(db, "local+remote", "_", orphans)
 		for entry := range orphans {
 			entry.Status = "removed"

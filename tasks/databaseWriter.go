@@ -57,9 +57,8 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 			case prev.Status == "":
 				switch {
 				case entry.Name == "lighthouse":
-					database.Add(db, entry)
 					entry.Status = "local"
-					database.Update(db, entry)
+					database.Add(db, entry)
 				case entry.Status == "local":
 					database.Insert(db, entry)
 					database.TransactionCommit(db, "added", entry)
@@ -98,7 +97,7 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 
 				// Cover "local", "remote"
 				default:
-					database.UpdateTime(db, entry)
+					database.Update(db, prev)
 					continue
 				}
 			case prev.Status == "remote":
@@ -115,7 +114,7 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 
 				// Cover "added", "remote", "unpinned"
 				default:
-					database.UpdateTime(db, entry)
+					database.Update(db, prev)
 					continue
 				}
 			case prev.Status == "removed":
@@ -137,7 +136,7 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 					continue
 
 				case entry.Status == "removed":
-					database.UpdateTime(db, entry)
+					database.Update(db, prev)
 					continue
 
 				// Cover "remote", "unpinned"

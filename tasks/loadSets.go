@@ -12,7 +12,7 @@ import (
 	"github.com/arkenproject/arken/database"
 )
 
-func loadSets(keySets []config.KeySet, new chan database.FileKey, output chan database.FileKey, settings chan string) {
+func loadSets(keySets []config.KeySet, added chan<- database.FileKey, output chan<- database.FileKey, settings chan string) {
 	// Run LoadSets every hour.
 	for {
 		for config.Flags.IndexingSets {
@@ -33,7 +33,8 @@ func loadSets(keySets []config.KeySet, new chan database.FileKey, output chan da
 				output <- lighthouse
 
 				fmt.Printf("Indexing: %s\n", filepath.Base(keySets[keySet].URL))
-				err = keysets.Index(location, new, output, settings)
+				err = keysets.Index(location, added, output, settings)
+
 				if err != nil {
 					log.Fatal(err)
 				}

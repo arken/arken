@@ -24,7 +24,7 @@ func getRepoSizeDaemon() {
 		err       error
 		usedSpace uint64
 	)
-	checkTime := time.Now().AddDate(0, -1, 0)
+	checkTime := time.Now().UTC().AddDate(0, -1, 0)
 
 	for {
 		select {
@@ -38,7 +38,7 @@ func getRepoSizeDaemon() {
 				if err != nil {
 					log.Fatal(err)
 				}
-				checkTime = time.Now()
+				checkTime = time.Now().UTC()
 			}
 			output <- usedSpace
 			continue

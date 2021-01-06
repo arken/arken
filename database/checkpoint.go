@@ -24,24 +24,6 @@ func SetCommit(db *sql.DB, hash string) (err error) {
 	return nil
 }
 
-// Insert adds a Keyset file entry to the database.
-func insertCommit(db *sql.DB, hash string) {
-	commit := "commit"
-	stmt, err := db.Prepare(
-		`INSERT INTO commitCheckpoint(
-			name,
-			hash
-		) VALUES(?,?);`)
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = stmt.Exec(commit, hash)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 // GetCommit searches for and returns a the coorisponding entry from the
 // database if the entry exists.
 func GetCommit(db *sql.DB) (result string, err error) {
@@ -60,6 +42,24 @@ func GetCommit(db *sql.DB) (result string, err error) {
 		log.Fatal(err)
 	}
 	return result, nil
+}
+
+// Insert adds a Keyset file entry to the database.
+func insertCommit(db *sql.DB, hash string) {
+	commit := "commit"
+	stmt, err := db.Prepare(
+		`INSERT INTO commitCheckpoint(
+			name,
+			hash
+		) VALUES(?,?);`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = stmt.Exec(commit, hash)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // updateCommit updates the checkpoint transaction of the entry in the DB

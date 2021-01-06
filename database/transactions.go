@@ -21,7 +21,7 @@ func TransactionCommit(db *sql.DB, action string, file FileKey) (err error) {
 		log.Fatal(err)
 	}
 	_, err = stmt.Exec(
-		time.Now(),
+		time.Now().UTC(),
 		file.ID,
 		action,
 		file.Size)
@@ -42,7 +42,7 @@ func TransactionSum(db *sql.DB, action string) (sum uint64, err error) {
 	// Get total pool size from sum of nodes reported values.
 	row, err := db.Query("SELECT SUM(size) FROM transactions WHERE action = ? AND time > ?",
 		action,
-		(time.Now()).AddDate(0, -1, 0))
+		(time.Now().UTC()).AddDate(0, -1, 0))
 	if err != nil {
 		return 0, err
 	}

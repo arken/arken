@@ -78,7 +78,6 @@ func GetAll(db *sql.DB, statusPattern string, keySet string, output chan FileKey
 			output <- key
 		}
 	}
-
 	close(output)
 }
 

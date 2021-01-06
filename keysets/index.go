@@ -3,7 +3,6 @@ package keysets
 import (
 	"bufio"
 	"bytes"
-	"database/sql"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -17,7 +16,7 @@ import (
 )
 
 // Index extracts the file identifiers from the keyset provided.
-func Index(path string, new chan database.FileKey, output chan database.FileKey, settings chan string) (err error) {
+func Index(path string, added chan<- database.FileKey, output chan<- database.FileKey, settings chan<- string) (err error) {
 	copyName := filepath.Join(filepath.Dir(config.Global.Database.Path), "index.db")
 	err = database.Copy(config.Global.Database.Path, copyName)
 	defer os.Remove(copyName)
@@ -38,17 +37,17 @@ func Index(path string, new chan database.FileKey, output chan database.FileKey,
 	}
 	hash, err := database.GetCommit(db)
 	if err != nil && err.Error() == "entry not found" {
-		err = IndexFull(db, path, new, output)
+		err = IndexFull(path, output)
 		if err != nil {
 			return err
 		}
 	} else {
 		if ref.Hash().String() != hash {
 			hashCommit := plumbing.NewHash(hash)
-			err = indexPatch(db, path, hashCommit, new, output)
+			err = indexPatch(path, hashCommit, added, output)
 			if err != nil {
 				if err.Error() == "object not found" {
-					err = IndexFull(db, path, new, output)
+					err = IndexFull(path, output)
 				}
 				if err != nil {
 					return err
@@ -63,7 +62,7 @@ func Index(path string, new chan database.FileKey, output chan database.FileKey,
 
 // IndexFull walks through the repository structure and extracts file identifiers from found
 // .ks files.
-func IndexFull(db *sql.DB, rootPath string, new chan database.FileKey, output chan database.FileKey) (err error) {
+func IndexFull(rootPath string, output chan<- database.FileKey) (err error) {
 	fileTemplate := database.FileKey{
 		Size:   -1,
 		Status: "added",
@@ -92,17 +91,7 @@ func IndexFull(db *sql.DB, rootPath string, new chan database.FileKey, output ch
 				fileTemplate.ID = data[0]
 				fileTemplate.Name = data[1]
 
-				entry, err := database.Get(db, data[0])
-				if err != nil && err.Error() == "entry not found" {
-					// Send parsed file to engine.
-					output <- fileTemplate
-					if new != nil {
-						new <- fileTemplate
-					}
-				} else if err == nil {
-					output <- entry
-				}
-
+				output <- fileTemplate
 			}
 			if err := scanner.Err(); err != nil {
 				return err
@@ -118,7 +107,7 @@ func IndexFull(db *sql.DB, rootPath string, new chan database.FileKey, output ch
 	return err
 }
 
-func indexPatch(db *sql.DB, path string, commitHash plumbing.Hash, newFiles chan<- database.FileKey, output chan<- database.FileKey) (err error) {
+func indexPatch(path string, commitHash plumbing.Hash, added chan<- database.FileKey, output chan<- database.FileKey) (err error) {
 	r, err := git.PlainOpen(path)
 	if err != nil {
 		return err
@@ -201,10 +190,7 @@ func indexPatch(db *sql.DB, path string, commitHash plumbing.Hash, newFiles chan
 		if entry.Status == "added" {
 			fmt.Printf("Added: %s  %s\n", entry.ID, entry.Name)
 			output <- entry
-			_, err := database.Get(db, entry.ID)
-			if err != nil && err.Error() == "entry not found" {
-				newFiles <- entry
-			}
+			added <- entry
 		}
 		if entry.Status == "removed" {
 			fmt.Printf("Removed: %s  %s\n", entry.ID, entry.Name)
