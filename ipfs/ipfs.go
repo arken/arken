@@ -58,7 +58,7 @@ func Init() {
 
 	peers := []string{
 		// Arken Bootstrapper node.
-		"/dns4/link.arken.io/tcp/4001/ipfs/QmP8krSfWWHLNL2eah6E1hr6TzoaGMEVRw2Fooy5og1Wpj",
+		"/dns4/link.arken.io/tcp/4001/ipfs/12D3KooWSmosHZtDBbepxWwVgo8HyXSgNCUgs2GGD2qnQPbA3KhD",
 		"/dns4/relay.arken.io/tcp/4001/ipfs/12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm",
 	}
 	go connectToPeers(ctx, ipfs, peers)
@@ -305,7 +305,7 @@ func createRepo(ctx context.Context, path string) (string, error) {
 	cfg.Routing.Type = "dhtserver"
 	bootstrapNodes := []string{
 		// Arken Bootstrapper node.
-		"/dns4/link.arken.io/tcp/4001/ipfs/QmP8krSfWWHLNL2eah6E1hr6TzoaGMEVRw2Fooy5og1Wpj",
+		"/dns4/link.arken.io/tcp/4001/ipfs/12D3KooWSmosHZtDBbepxWwVgo8HyXSgNCUgs2GGD2qnQPbA3KhD",
 		"/dns4/relay.arken.io/tcp/4001/ipfs/12D3KooWL7hvR7nfQxAWMowgoWXWQwKEkQA8QPZrhKjateRTgcDm",
 	}
 	cfg.Bootstrap = bootstrapNodes
