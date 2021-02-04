@@ -10,7 +10,7 @@ import (
 
 func importKeysetSettings(keyset *config.KeySet, rootPath string) (err error) {
 	// Import Settings from keyset.config
-	_, err = toml.DecodeFile(filepath.Join(rootPath, "keyset.config"), &keyset)
+	_, err = toml.DecodeFile(filepath.Join(rootPath, "keyset.config"), keyset)
 	if err != nil {
 		return err
 	}
