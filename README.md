@@ -1,6 +1,6 @@
 # Arken
 
-A Decentralized Digital Archive Built for the World's Open Source and Scientific Data.
+A Distributed Digital Archive Built for the World's Open Source and Scientific Data.
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/arkenproject/arken)](https://goreportcard.com/report/github.com/arkenproject/arken)
 
