@@ -37,7 +37,7 @@ func Index(path string, added chan<- database.FileKey, output chan<- database.Fi
 	}
 	hash, err := database.GetCommit(db)
 	if err != nil && err.Error() == "entry not found" {
-		err = IndexFull(path, output)
+		err = IndexFull(path, added)
 		if err != nil {
 			return err
 		}
