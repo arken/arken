@@ -53,7 +53,7 @@ func readSources() {
 // Set the default keyset for new nodes.
 func defaultSources() sourcesFileData {
 	result := sourcesFileData{
-		Sets: []string{"https://github.com/arkenproject/core-keyset"},
+		Sets: []string{"https://github.com/arken/core-keyset"},
 	}
 
 	return result

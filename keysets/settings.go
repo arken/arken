@@ -3,7 +3,7 @@ package keysets
 import (
 	"path/filepath"
 
-	"github.com/arkenproject/arken/config"
+	"github.com/arken/arken/config"
 
 	"github.com/BurntSushi/toml"
 )

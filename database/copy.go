@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/arkenproject/arken/config"
+	"github.com/arken/arken/config"
 )
 
 // Copy copies the database to a new location.

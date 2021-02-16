@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/arkenproject/arken/database"
+	"github.com/arken/arken/database"
 	"github.com/ipfs/go-ipfs/core/corerepo"
 	"github.com/ipfs/interface-go-ipfs-core/options"
 	icorepath "github.com/ipfs/interface-go-ipfs-core/path"

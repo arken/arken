@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/arkenproject/arken/config"
-	"github.com/arkenproject/arken/keysets"
+	"github.com/arken/arken/config"
+	"github.com/arken/arken/keysets"
 
-	"github.com/arkenproject/arken/database"
+	"github.com/arken/arken/database"
 )
 
 func loadSets(keySets []config.KeySet, added chan<- database.FileKey, output chan<- database.FileKey, settings chan string) {

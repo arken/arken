@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/arkenproject/arken/config"
-	"github.com/arkenproject/arken/database"
-	"github.com/arkenproject/arken/ipfs"
-	"github.com/arkenproject/arken/keysets"
+	"github.com/arken/arken/config"
+	"github.com/arken/arken/database"
+	"github.com/arken/arken/ipfs"
+	"github.com/arken/arken/keysets"
 )
 
 func verifyDB(keySets []config.KeySet, new chan database.FileKey, output chan database.FileKey) {

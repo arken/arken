@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/arkenproject/arken/ipfs"
+	"github.com/arken/arken/ipfs"
 
-	"github.com/arkenproject/arken/config"
-	"github.com/arkenproject/arken/database"
+	"github.com/arken/arken/config"
+	"github.com/arken/arken/database"
 )
 
 // VerifyLocal verifies to ipfs that the local files are still

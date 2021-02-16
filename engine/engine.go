@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/arkenproject/arken/config"
-	"github.com/arkenproject/arken/database"
-	"github.com/arkenproject/arken/ipfs"
+	"github.com/arken/arken/config"
+	"github.com/arken/arken/database"
+	"github.com/arken/arken/ipfs"
 )
 
 // NetworkLimit is true if the node has hit it's download limit for the month.

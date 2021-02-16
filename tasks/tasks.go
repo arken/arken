@@ -4,10 +4,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/arkenproject/arken/config"
-	"github.com/arkenproject/arken/database"
-	"github.com/arkenproject/arken/engine"
-	"github.com/arkenproject/arken/keysets"
+	"github.com/arken/arken/config"
+	"github.com/arken/arken/database"
+	"github.com/arken/arken/engine"
+	"github.com/arken/arken/keysets"
 )
 
 // Main handles the main parent loop of Arken's Management System.

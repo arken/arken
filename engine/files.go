@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/arkenproject/arken/config"
+	"github.com/arken/arken/config"
 
-	"github.com/arkenproject/arken/database"
-	"github.com/arkenproject/arken/ipfs"
+	"github.com/arken/arken/database"
+	"github.com/arken/arken/ipfs"
 )
 
 /*

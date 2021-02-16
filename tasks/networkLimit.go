@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/arkenproject/arken/engine"
+	"github.com/arken/arken/engine"
 )
 
 func checkNetworkLimit() {

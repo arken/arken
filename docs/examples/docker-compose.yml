@@ -2,7 +2,7 @@ version: '3'
 
 services:
   arken:
-    image: arkenproject/arken:latest
+    image: arken/arken:latest
     restart: always
     volumes:
       - </PATH/TO/MOUNTED/DRIVE/HERE>/storage:/data/storage

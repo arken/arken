@@ -20,5 +20,5 @@ jobs:
       - name: build the image
         run: |
           docker buildx build --push \
-            --tag arkenproject/arken:latest \
+            --tag arken/arken:latest \
             --platform linux/amd64,linux/arm/v6,linux/arm64 .

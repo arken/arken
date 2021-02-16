@@ -3,10 +3,10 @@ package tasks
 import (
 	"fmt"
 
-	"github.com/arkenproject/arken/config"
-	"github.com/arkenproject/arken/database"
-	"github.com/arkenproject/arken/engine"
-	"github.com/arkenproject/arken/ipfs"
+	"github.com/arken/arken/config"
+	"github.com/arken/arken/database"
+	"github.com/arken/arken/engine"
+	"github.com/arken/arken/ipfs"
 )
 
 func checkNodeSize(output chan<- database.FileKey) error {

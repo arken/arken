@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/arkenproject/arken/config"
-	"github.com/arkenproject/arken/database"
+	"github.com/arken/arken/config"
+	"github.com/arken/arken/database"
 )
 
 // CheckNetUsage returns if the total number of files downloaded in the last

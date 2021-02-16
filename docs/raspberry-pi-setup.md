@@ -125,7 +125,7 @@ mmcblk0     179:0    0 29.8G  0 disk
 1. Download the Arken Docker Compose Configuration
 
 ```bash
-wget https://raw.githubusercontent.com/arkenproject/arken/master/docs/examples/docker-compose.yml
+wget https://raw.githubusercontent.com/arken/arken/master/docs/examples/docker-compose.yml
 ```
 
 2. Open the `docker-compose.yml` you just downloaded and edit the configuration values to reflect your system. 

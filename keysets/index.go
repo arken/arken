@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/arkenproject/arken/config"
-	"github.com/arkenproject/arken/database"
+	"github.com/arken/arken/config"
+	"github.com/arken/arken/database"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/ipfs/go-cid"

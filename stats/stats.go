@@ -5,8 +5,8 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/arkenproject/arken/config"
-	"github.com/arkenproject/arken/ipfs"
+	"github.com/arken/arken/config"
+	"github.com/arken/arken/ipfs"
 )
 
 // Report uses the uploads stats data to Arken data from the node about

@@ -3,7 +3,7 @@ package tasks
 import (
 	"time"
 
-	"github.com/arkenproject/arken/engine"
+	"github.com/arken/arken/engine"
 )
 
 // VerifyLocal runs a weekly check to verify locally pinned files are

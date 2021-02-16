@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/arkenproject/arken/config"
-	"github.com/arkenproject/arken/database"
+	"github.com/arken/arken/config"
+	"github.com/arken/arken/database"
 )
 
 func databaseReader(remote chan database.FileKey, output chan database.FileKey) {

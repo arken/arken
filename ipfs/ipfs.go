@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	arkenConf "github.com/arkenproject/arken/config"
+	arkenConf "github.com/arken/arken/config"
 
 	config "github.com/ipfs/go-ipfs-config"
 	serialize "github.com/ipfs/go-ipfs-config/serialize"

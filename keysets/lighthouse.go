@@ -3,8 +3,8 @@ package keysets
 import (
 	"path/filepath"
 
-	"github.com/arkenproject/arken/database"
-	"github.com/arkenproject/arken/ipfs"
+	"github.com/arken/arken/database"
+	"github.com/arken/arken/ipfs"
 )
 
 // ConfigLighthouse constructs a lighthouse file key.

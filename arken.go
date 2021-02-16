@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 
-	"github.com/arkenproject/arken/tasks"
+	"github.com/arken/arken/tasks"
 
-	"github.com/arkenproject/arken/ipfs"
+	"github.com/arken/arken/ipfs"
 
-	"github.com/arkenproject/arken/config"
+	"github.com/arken/arken/config"
 )
 
 func main() {

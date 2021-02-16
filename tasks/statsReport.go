@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/arkenproject/arken/config"
-	"github.com/arkenproject/arken/stats"
+	"github.com/arken/arken/config"
+	"github.com/arken/arken/stats"
 )
 
 // StatsReporting periodically reports node statistics for

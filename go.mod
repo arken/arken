@@ -1,4 +1,4 @@
-module github.com/arkenproject/arken
+module github.com/arken/arken
 
 go 1.14
 

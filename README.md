@@ -1,8 +1,10 @@
 # Arken
 
+<img src="https://avatars.githubusercontent.com/u/66809416?s=200&v=4">
+
 A Distributed Digital Archive Built for the World's Open Source and Scientific Data.
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/arkenproject/arken)](https://goreportcard.com/report/github.com/arkenproject/arken)
+[![Go Report Card](https://goreportcard.com/badge/github.com/arken/arken)](https://goreportcard.com/report/github.com/arken/arken)
 
 ## Table of Contents
 
@@ -74,7 +76,7 @@ replace one well backed up file on the system with files below the optimal thres
 ## Getting Started
 
 #### Tutorials:
-[Getting Started with Arken on a Raspberry Pi](https://github.com/arkenproject/arken/blob/master/docs/raspberry-pi-setup.md)
+[Getting Started with Arken on a Raspberry Pi](https://github.com/arken/arken/blob/master/docs/raspberry-pi-setup.md)
 
 To start running a node, you can download Arken as a Golang program or as a Docker container. 
 **It's recommended to run Arken as a Docker container for simplicity and ease of updating.** 
@@ -93,13 +95,13 @@ docker run -d --name arken \
  -e ARKEN_SOURCES_REPOSITORIES=/data/repositories \
  -e ARKEN_SOURCES_STORAGE=/data/storage \
  -p 4001:4001 \
- --restart=always arkenproject/arken
+ --restart=always arken/arken
 ```
 
 ##### Go Package:
 
 ```
-go get github.com/arkenproject/arken
+go get github.com/arken/arken
 go run arken
 ```
 
@@ -107,7 +109,7 @@ go run arken
 
 Let's say that you are a scholar who wants to preserve some important works of humanity, or a researcher who wants 
 to back up the DNA of an extinct animal/plant. How would you go about adding your data to the distributed file system? 
-First, you would download & run the [Arken Import Tool](https://github.com/arkenproject/ait). Using the Arken Import tool you can create 
+First, you would download & run the [Arken Import Tool](https://github.com/arken/ait). Using the Arken Import tool you can create 
 a Keyset file of the IPFS identifiers for your data. At this point you can either upload the Keyset to your own Git 
 repository (this is best if you want to run your own pool of workers) or make an application to put your data in the
 Core Keyset repository. The Core Keyset repository consists of extremely important data to preserve and is what the 
@@ -115,8 +117,8 @@ community donating their extra disk space uses by default.
 
 ### What's the process as someone donating their extra storage space?
 
-Old computers or servers with some empty storage space make excellent Arken nodes. Check out our guide for configuring a Raspberry Pi with Docker and External Storage Arken [here](https://github.com/arkenproject/arken/blob/master/docs/raspberry-pi-setup.md). After installing the 
-Arken program, you can configure it either through environment variables or the Arken configuration file located at `~/.arken/`. You can check out an example of an Arken Docker-Compose file [here](https://github.com/arkenproject/arken/blob/master/docs/examples/docker-compose.yml). The core Keyset will be available by default, but because Keysets are just Git repositories, you can add and use 
+Old computers or servers with some empty storage space make excellent Arken nodes. Check out our guide for configuring a Raspberry Pi with Docker and External Storage Arken [here](https://github.com/arken/arken/blob/master/docs/raspberry-pi-setup.md). After installing the 
+Arken program, you can configure it either through environment variables or the Arken configuration file located at `~/.arken/`. You can check out an example of an Arken Docker-Compose file [here](https://github.com/arken/arken/blob/master/docs/examples/docker-compose.yml). The core Keyset will be available by default, but because Keysets are just Git repositories, you can add and use 
 any Keyset you'd like. For example, you can donate space to the core community pool but also sync a custom Keyset of 
 some vacation pictures amongst yours and a few friends' machines.
 

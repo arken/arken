@@ -5,10 +5,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/arkenproject/arken/ipfs"
+	"github.com/arken/arken/ipfs"
 
-	"github.com/arkenproject/arken/config"
-	"github.com/arkenproject/arken/database"
+	"github.com/arken/arken/config"
+	"github.com/arken/arken/database"
 )
 
 func databaseWriter(input chan database.FileKey, settings chan string) {
