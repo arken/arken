@@ -24,7 +24,7 @@ func databaseReader(remote chan database.FileKey, output chan database.FileKey) 
 
 		// Grab all remote files and pass to engine to check for at risk files.
 		relay := make(chan database.FileKey)
-		go database.GetAll(db, "remote", "", relay)
+		go database.GetAll(db, "remote+added", "", relay)
 
 		for entry := range relay {
 			remote <- entry
