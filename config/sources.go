@@ -22,7 +22,6 @@ type KeySet struct {
 	Replications int
 	Gateway      string
 	StatsURL     string
-	SwarmKey     string
 	Path         string
 }
 
