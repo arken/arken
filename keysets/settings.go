@@ -2,6 +2,7 @@ package keysets
 
 import (
 	"path/filepath"
+	"strings"
 
 	"github.com/arken/arken/config"
 
@@ -14,6 +15,8 @@ func importKeysetSettings(keyset *config.KeySet, rootPath string) (err error) {
 	if err != nil {
 		return err
 	}
+	keyset.Name = strings.TrimSuffix(filepath.Base(rootPath), ".git")
+	keyset.Path = rootPath
 
 	return nil
 }

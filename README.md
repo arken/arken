@@ -55,8 +55,7 @@ Arken uses Keysets to transparently keep track of which files are important to t
 monitored and backed up if needed. Unlike a Pinset in an IPFS cluster, a Keyset is simply a plain text git repository
 made of up file identifiers. Additionally, Keysets are easy to audit so you can actually know what data you're helping
 preserve. Keyset repositories can contain an arbitrary number of directories used to organize keyset files as long as 
-they also contain a `keyset.config` YAML file. This config file provides both a lighthouse file identifier used to 
-measure the total number of nodes subscribed to that Keyset, and a replication factor that is the percentage of the
+they also contain a `keyset.config` YAML file. This config file provides a replication factor that is the percentage of the
 total network that should be storing a file at any given time.
 
 While Keysets tell Arken which files should be stored on the subscribed nodes, they don't contain any of the

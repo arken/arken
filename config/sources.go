@@ -17,11 +17,13 @@ var (
 
 // KeySet defines the global structure housing the known keysets.
 type KeySet struct {
-	URL              string
-	LightHouseFileID string
-	Replications     int
-	Gateway          string
-	StatsURL         string
+	Name         string
+	URL          string
+	Replications int
+	Gateway      string
+	StatsURL     string
+	SwarmKey     string
+	Path         string
 }
 
 type sourcesFileData struct {

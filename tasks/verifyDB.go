@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/arken/arken/config"
@@ -16,12 +17,8 @@ import (
 func verifyDB(keySets []config.KeySet, new chan database.FileKey, output chan database.FileKey) {
 	// Run Verify After Indexing has Finished
 	for {
-		time.Sleep(30 * time.Second)
-		for config.Flags.IndexingSets {
-			time.Sleep(1 * time.Hour)
-		}
+		config.Locks.IndexingSets.Lock()
 		fmt.Println("\n[Verifying Internal DB against Keysets]")
-		config.Flags.IndexingSets = true
 
 		// Verify files in IPFS node match with Database before copying the database.
 		nodeFiles := make(chan database.FileKey)
@@ -30,16 +27,10 @@ func verifyDB(keySets []config.KeySet, new chan database.FileKey, output chan da
 			output <- entry
 		}
 
-		// Bring the modified date past the lighthouse file for all files still within a keyset.
+		startTime := time.Now()
+		// Bring the modified date past the current check time for all files still within a keyset.
 		for _, keySet := range keySets {
-			location := filepath.Join(config.Global.Sources.Repositories, filepath.Base(keySet.URL))
-			lighthouse, err := keysets.ConfigLighthouse(keySet.LightHouseFileID, keySet.URL)
-			if err != nil {
-				log.Fatal(err)
-			}
-			output <- lighthouse
-
-			err = keysets.IndexFull(location, output)
+			err := keysets.IndexFull(keySet.Path, output)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -58,35 +49,24 @@ func verifyDB(keySets []config.KeySet, new chan database.FileKey, output chan da
 		}
 		db, err := database.Open(copyName)
 		if err != nil {
+			if strings.HasSuffix(err.Error(), "no such file or directory") {
+				continue
+			}
 			log.Fatal(err)
 		}
 
 		// Check each keyset for files that were not touched during the index
-		for _, keySet := range keySets {
-			lighthouse, err := database.Get(db, keySet.LightHouseFileID)
-			if err != nil {
-				log.Fatal(err)
-			}
+		files := make(chan database.FileKey)
+		go database.GetAll(db, "local+remote", "", files)
 
-			files := make(chan database.FileKey)
-			go database.GetAll(db, "local+remote", lighthouse.KeySet, files)
-
-			for entry := range files {
-				if entry.Modified.Before(lighthouse.Modified) {
-					entry.Status = "removed"
-					output <- entry
+		for entry := range files {
+			if entry.Modified.Before(startTime) {
+				entry.Status = "removed"
+				output <- entry
+				if config.Flags.Verbose {
 					fmt.Printf("Removed: %s  %s\n", entry.ID, entry.Name)
 				}
 			}
-		}
-
-		// Remove files found by IPFS with no owning Keyset.
-		orphans := make(chan database.FileKey)
-		go database.GetAll(db, "local+remote", "_", orphans)
-		for entry := range orphans {
-			entry.Status = "removed"
-			output <- entry
-			fmt.Printf("Removed: %s  %s\n", entry.ID, entry.Name)
 		}
 
 		fmt.Println("[Finished Verifying Keysets]")
@@ -98,7 +78,7 @@ func verifyDB(keySets []config.KeySet, new chan database.FileKey, output chan da
 		if err != nil {
 			log.Fatal(err)
 		}
-		config.Flags.IndexingSets = false
+		config.Locks.IndexingSets.Unlock()
 		time.Sleep(7 * 24 * time.Hour)
 	}
 }

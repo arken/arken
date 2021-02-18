@@ -15,24 +15,17 @@ import (
 func loadSets(keySets []config.KeySet, added chan<- database.FileKey, output chan<- database.FileKey, settings chan string) {
 	// Run LoadSets every hour.
 	for {
-		for config.Flags.IndexingSets {
-			time.Sleep(15 * time.Minute)
-		}
+		config.Locks.IndexingSets.Lock()
 		fmt.Println("\n[Indexing & Updating Keysets]")
-		config.Flags.IndexingSets = true
 		err := keysets.LoadSets(keySets)
 		if err != nil {
 			log.Println(err)
 		} else {
 			for keySet := range keySets {
-				location := filepath.Join(config.Global.Sources.Repositories, filepath.Base(keySets[keySet].URL))
-				lighthouse, err := keysets.ConfigLighthouse(keySets[keySet].LightHouseFileID, keySets[keySet].URL)
-				if err != nil {
-					log.Fatal(err)
+				location := keySets[keySet].Path
+				if config.Flags.Verbose {
+					fmt.Printf("Indexing: %s\n", filepath.Base(keySets[keySet].URL))
 				}
-				output <- lighthouse
-
-				fmt.Printf("Indexing: %s\n", filepath.Base(keySets[keySet].URL))
 				err = keysets.Index(location, added, output, settings)
 
 				if err != nil {
@@ -42,7 +35,7 @@ func loadSets(keySets []config.KeySet, added chan<- database.FileKey, output cha
 		}
 
 		fmt.Println("[Finished Indexing & Updating Keysets]")
-		config.Flags.IndexingSets = false
+		config.Locks.IndexingSets.Unlock()
 		time.Sleep(1 * time.Hour)
 	}
 }

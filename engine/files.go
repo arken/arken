@@ -47,14 +47,17 @@ func ReplicateAtRiskFile(file database.FileKey, keysets map[string]int, write ch
 				return file, err
 			}
 		}
-
-		fmt.Printf("Pinning to Local Storage: %s\n", file.ID)
+		if config.Flags.Verbose {
+			fmt.Printf("Pinning to Local Storage: %s\n", file.ID)
+		}
 		err = ipfs.Pin(file.ID)
 		if err != nil {
 			return file, err
 		}
 		ipfs.AdjustRepoSize(int64(file.Size))
-		fmt.Printf("Pinned to Local Storage: %s\n", file.ID)
+		if config.Flags.Verbose {
+			fmt.Printf("Pinned to Local Storage: %s\n", file.ID)
+		}
 
 		file.Status = "local"
 		return file, nil
