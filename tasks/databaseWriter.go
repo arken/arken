@@ -90,7 +90,7 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 
 				case entry.Status == "added":
 					prev.Name = entry.Name
-					database.Update(db, entry)
+					database.Update(db, prev)
 
 				// Cover "local", "remote"
 				default:
