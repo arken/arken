@@ -78,10 +78,6 @@ func makeSpaceDaemon() {
 			var response []database.FileKey
 
 			for entry := range input {
-				if entry.Name == "lighthouse" {
-					ping <- true
-					continue
-				}
 				replications, err := ipfs.FindProvs(entry.ID, keysets[entry.KeySet]+10)
 				if err != nil {
 					log.Fatal(err)

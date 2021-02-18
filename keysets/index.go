@@ -85,7 +85,9 @@ func IndexFull(rootPath string, output chan<- database.FileKey) (err error) {
 			for scanner.Scan() {
 				// Split data on white space.
 				data := strings.Fields(scanner.Text())
-				fmt.Printf("Parsed: %s\n", data)
+				if config.Flags.Verbose {
+					fmt.Printf("Parsed: %s\n", data)
+				}
 
 				// Set custom file values.
 				fileTemplate.ID = data[0]
@@ -188,12 +190,16 @@ func indexPatch(path string, commitHash plumbing.Hash, added chan<- database.Fil
 	}
 	for _, entry := range entries {
 		if entry.Status == "added" {
-			fmt.Printf("Added: %s  %s\n", entry.ID, entry.Name)
+			if config.Flags.Verbose {
+				fmt.Printf("Added: %s  %s\n", entry.ID, entry.Name)
+			}
 			output <- entry
 			added <- entry
 		}
 		if entry.Status == "removed" {
-			fmt.Printf("Removed: %s  %s\n", entry.ID, entry.Name)
+			if config.Flags.Verbose {
+				fmt.Printf("Removed: %s  %s\n", entry.ID, entry.Name)
+			}
 			output <- entry
 		}
 	}

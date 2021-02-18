@@ -25,12 +25,6 @@ func Run(new, remotes, output chan database.FileKey) (err error) {
 	for set := range config.Keysets {
 		name := strings.Split(filepath.Base(config.Keysets[set].URL), ".")[0]
 		keysets[name] = config.Keysets[set].Replications
-
-		// Pin Lighthouse File to determine the size of the active cluster.
-		err = ipfs.Pin(config.Keysets[set].LightHouseFileID)
-		if err != nil {
-			return err
-		}
 	}
 
 	// Determine the possible number of threads for the system's CPU
@@ -80,8 +74,9 @@ func runWorker(keysets map[string]int, input <-chan database.FileKey, output cha
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		fmt.Printf("File: %s is backed up %d time(s) and the threshold is %d.\n", key.ID, replications, threshold)
+		if config.Flags.Verbose {
+			fmt.Printf("File: %s is backed up %d time(s) and the threshold is %d.\n", key.ID, replications, threshold)
+		}
 
 		// Determine an at risk file.
 		// Node: if a file is hosted 0 times don't try to pin it.

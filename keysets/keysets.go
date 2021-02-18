@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/arken/arken/config"
@@ -23,7 +24,8 @@ func LoadSets(keysets []config.KeySet) (err error) {
 	client.InstallProtocol("https", githttp.NewClient(newClient))
 
 	for repo := range keysets {
-		location := filepath.Join(config.Global.Sources.Repositories, filepath.Base(keysets[repo].URL))
+		raw := filepath.Join(config.Global.Sources.Repositories, filepath.Base(keysets[repo].URL))
+		location := strings.TrimSuffix(raw, ".git")
 		r, err := git.PlainOpen(location)
 		if err != nil && err.Error() == "repository does not exist" {
 			r, err = git.PlainClone(location, false, &git.CloneOptions{

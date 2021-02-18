@@ -56,9 +56,6 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 			switch {
 			case prev.Status == "":
 				switch {
-				case entry.Name == "lighthouse":
-					entry.Status = "local"
-					database.Add(db, entry)
 				case entry.Status == "local":
 					database.Insert(db, entry)
 					database.TransactionCommit(db, "added", entry)

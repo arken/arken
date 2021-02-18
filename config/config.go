@@ -1,11 +1,13 @@
 package config
 
 import (
+	"flag"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
 	"path/filepath"
+	"sync"
 
 	"github.com/BurntSushi/toml"
 )
@@ -46,15 +48,22 @@ type stats struct {
 
 // Status defines where the program looks to tell if other processes are
 // currently running
-type Status struct {
-	IndexingSets bool
+type locks struct {
+	IndexingSets sync.Mutex
+}
+
+// Flags contains any application flags
+type flags struct {
+	Verbose bool
 }
 
 var (
 	// Global is the configuration struct for the application.
 	Global Config
-	// Flags is the live configuration of currently running modules.
-	Flags Status
+	// Locks is the live configuration of currently running modules.
+	Locks locks
+	// Flags contains any flags passed to the application.
+	Flags flags
 	// Disk is the configuration interface for the disk utilities.
 	Disk DiskInfo
 	path string
@@ -84,6 +93,9 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	flag.BoolVar(&Flags.Verbose, "v", false, "-v")
+	flag.Parse()
 }
 
 // LoadDiskConfig loads the Disk Configuration
