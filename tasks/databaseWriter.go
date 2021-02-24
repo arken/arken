@@ -54,7 +54,7 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 				log.Fatal(err)
 			}
 			switch {
-			case prev.Status == "" || prev.Status == "added":
+			case prev.Status == "":
 				switch {
 				case entry.Status == "local":
 					database.Insert(db, entry)
@@ -97,7 +97,7 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 					database.Update(db, prev)
 					continue
 				}
-			case prev.Status == "remote":
+			case prev.Status == "remote" || prev.Status == "added":
 				switch {
 				case entry.Status == "local":
 					entry.Name = prev.Name
@@ -111,6 +111,7 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 
 				// Cover "added", "remote", "unpinned"
 				default:
+					prev.Status = "remote"
 					database.Update(db, prev)
 					continue
 				}
