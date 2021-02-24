@@ -18,7 +18,7 @@ import (
 // cloning the repositories if not found locally and pulling updates
 // to local repositories.
 func LoadSets(keysets []config.KeySet) (err error) {
-	newClient := &http.Client{Timeout: 5 * time.Second}
+	newClient := &http.Client{Timeout: 15 * time.Second}
 
 	// Override http(s) default protocol to use our custom client
 	client.InstallProtocol("https", githttp.NewClient(newClient))
