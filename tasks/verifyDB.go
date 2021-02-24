@@ -69,6 +69,17 @@ func verifyDB(keySets []config.KeySet, new chan database.FileKey, output chan da
 			}
 		}
 
+		// Remove files found by IPFS with no owning Keyset.
+		orphans := make(chan database.FileKey)
+		go database.GetAll(db, "local+remote", "_", orphans)
+		for entry := range orphans {
+			entry.Status = "removed"
+			output <- entry
+			if config.Flags.Verbose {
+				fmt.Printf("Removed: %s  %s\n", entry.ID, entry.Name)
+			}
+		}
+
 		fmt.Println("[Finished Verifying Keysets]")
 		err = db.Close()
 		if err != nil {
