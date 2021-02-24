@@ -54,7 +54,7 @@ func databaseWriter(input chan database.FileKey, settings chan string) {
 				log.Fatal(err)
 			}
 			switch {
-			case prev.Status == "":
+			case prev.Status == "" || prev.Status == "added":
 				switch {
 				case entry.Status == "local":
 					database.Insert(db, entry)
