@@ -50,12 +50,6 @@ func Init() {
 		log.Fatal(err)
 	}
 
-	cfg, err := node.Repo.Config()
-	if err != nil {
-		log.Fatal(err)
-	}
-	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
-
 	peers := []string{
 		// Arken Bootstrapper node.
 		"/dns4/link.arken.io/tcp/4001/ipfs/12D3KooWSmosHZtDBbepxWwVgo8HyXSgNCUgs2GGD2qnQPbA3KhD",
@@ -133,6 +127,9 @@ func setRelay(relay bool, path string) (err error) {
 		cfg.Addresses.Announce = []string{}
 	}
 	cfg.Routing.Type = "dhtserver"
+	cfg.Reprovider.Interval = "12h"
+	cfg.Reprovider.Strategy = "roots"
+	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
 
 	configFilename, err := config.Filename(path)
 	if err != nil {
@@ -301,7 +298,7 @@ func createRepo(ctx context.Context, path string) (string, error) {
 
 	cfg.Datastore.StorageMax = arkenConf.Global.General.PoolSize
 	cfg.Reprovider.Strategy = "roots"
-	cfg.Reprovider.Interval = "1h"
+	cfg.Reprovider.Interval = "12h"
 	cfg.Routing.Type = "dhtserver"
 	bootstrapNodes := []string{
 		// Arken Bootstrapper node.
