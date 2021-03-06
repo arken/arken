@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -216,11 +217,20 @@ func createNode(ctx context.Context, repoPath string) (icore.CoreAPI, error) {
 	repo, err := fsrepo.Open(repoPath)
 	if err != nil {
 		if err == fsrepo.ErrNeedMigration {
-			migrate.DistPath = repoPath
 			err = migrate.RunMigration(fsrepo.RepoVersion)
 			if err != nil {
 				return nil, err
 			}
+			version := strconv.Itoa(fsrepo.RepoVersion)
+			err := ioutil.WriteFile(filepath.Join(repoPath, migrate.VersionFile), []byte(version), 0644)
+			if err != nil {
+				return nil, err
+			}
+			repo, err = fsrepo.Open(repoPath)
+			if err != nil {
+				return nil, err
+			}
+
 		} else {
 			return nil, err
 		}
