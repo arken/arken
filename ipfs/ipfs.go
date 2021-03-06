@@ -217,6 +217,10 @@ func createNode(ctx context.Context, repoPath string) (icore.CoreAPI, error) {
 	repo, err := fsrepo.Open(repoPath)
 	if err != nil {
 		if err == fsrepo.ErrNeedMigration {
+			err = os.Setenv("IPFS_PATH", repoPath)
+			if err != nil {
+				return nil, err
+			}
 			err = migrate.RunMigration(fsrepo.RepoVersion)
 			if err != nil {
 				return nil, err

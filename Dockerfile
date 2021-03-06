@@ -24,6 +24,9 @@ RUN go build -o arken .
 # Start again with minimal envoirnment.
 FROM debian:stable-slim
 
+RUN apt update && \
+    apt install -y ca-certificates
+
 # Set the Current Working Directory inside the container
 WORKDIR /app
 
