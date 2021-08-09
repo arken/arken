@@ -1,127 +1,167 @@
 package config
 
 import (
-	"flag"
-	"io/ioutil"
-	"log"
+	"bytes"
 	"os"
-	"os/user"
 	"path/filepath"
-	"sync"
+	"reflect"
+	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/dustin/go-humanize"
+	"github.com/shirou/gopsutil/disk"
 )
-
-// Config defines the configuration struct for importing settings from TOML.
-type Config struct {
-	General  general
-	Database database
-	Sources  sources
-	Stats    stats
-}
-
-// general defines the substruct about general application settings.
-type general struct {
-	Version        string
-	PoolSize       string
-	NetworkLimit   string
-	StatsReporting string
-}
-
-// database defines database specific config settings.
-type database struct {
-	Path string
-}
-
-// sources defines where to look for the local cloned Keyset repositories
-type sources struct {
-	Config       string
-	Repositories string
-	Storage      string
-}
-
-// stats defines where to look for the stats configuration.
-type stats struct {
-	Username string
-	Email    string
-}
-
-// Status defines where the program looks to tell if other processes are
-// currently running
-type locks struct {
-	IndexingSets sync.Mutex
-}
-
-// Flags contains any application flags
-type flags struct {
-	Verbose bool
-}
 
 var (
-	// Global is the configuration struct for the application.
-	Global Config
-	// Locks is the live configuration of currently running modules.
-	Locks locks
-	// Flags contains any flags passed to the application.
-	Flags flags
-	// Disk is the configuration interface for the disk utilities.
-	Disk DiskInfo
-	path string
+	// Version is the current version of Arken
+	Version string = "develop"
+	// Global is the global application configuration
+	Global config
 )
 
-// initialize the app config system. If a config doesn't exist, create one.
-// If the config is out of date read the current config and rebuild with new fields.
-func init() {
-	// Determine the current user to build expected file path.
-	user, err := user.Current()
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Create expected config path.
-	path = filepath.Join(user.HomeDir, ".arken", "arken.config")
-	readConf(&Global)
-	// If the configuration version has changed update the config to the new
-	// format while keeping the user's preferences.
-	if Global.General.Version != defaultConf().General.Version {
-		reloadConf()
-		readConf(&Global)
-	}
-	ConsolidateEnvVars(&Global)
-	readSources()
-
-	err = createSwarmKey()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	flag.BoolVar(&Flags.Verbose, "v", false, "-v")
-	flag.Parse()
+type config struct {
+	Database database `toml:"database"`
+	Storage  storage  `toml:"storage"`
+	Manifest manifest `toml:"manifest"`
+	Network  network  `toml:"network"`
+	Stats    stats    `toml:"stats"`
 }
 
-// LoadDiskConfig loads the Disk Configuration
-func LoadDiskConfig() {
-	ParsePoolSize(&Disk)
-	Global.General.PoolSize = Disk.GetPrettyPoolSize()
+type database struct {
+	Path string `toml:"path"`
 }
 
-// Read the config or create a new one if it doesn't exist.
-func readConf(conf *Config) {
-	_, err := toml.DecodeFile(path, &conf)
-	if os.IsNotExist(err) {
-		genConf(defaultConf())
-		readConf(conf)
+type storage struct {
+	Limit string `toml:"limit"`
+	Path  string `toml:"path"`
+}
+
+type manifest struct {
+	Name           string `toml:"name,omitempty"`
+	BootstrapPeers string `toml:"bootstrap_peers,omitempty"`
+	ClusterKey     string `toml:"cluster_key,omitempty"`
+	Replications   string `toml:"replications,omitempty"`
+	StatsNode      string `toml:"stats_node,omitempty"`
+	URL            string `toml:"url"`
+}
+
+type network struct {
+	Limit string `toml:"limit"`
+}
+
+type stats struct {
+	Enabled string `toml:"enabled"`
+	Email   string `toml:"email"`
+}
+
+func Init(path string) error {
+
+	// Generate the default config
+	Global = config{
+		Database: database{
+			Path: filepath.Join(filepath.Dir(path), "arken.db"),
+		},
+		Storage: storage{
+			Limit: "50GB",
+			Path:  filepath.Join(filepath.Dir(path), "storage"),
+		},
+		Manifest: manifest{
+			URL: "https://github.com/arken/core-manifest",
+		},
+		Network: network{
+			Limit: "500GB",
+		},
+		Stats: stats{
+			Enabled: "true",
+			Email:   "",
+		},
 	}
+
+	// Read in config from file
+	err := parseFile(path, &Global)
 	if err != nil && !os.IsNotExist(err) {
-		log.Fatal(err)
+		return err
 	}
+
+	// Read in config from environment
+	err = sourceEnv(&Global)
+	if err != nil {
+		return err
+	}
+
+	// As long as the IPFS nodes hasn't been initialized set the storage quota
+	// to the max storage available on the drive.
+	if _, err := os.Open(filepath.Join(Global.Storage.Path, "config")); os.IsNotExist(err) {
+
+		// Create the storage path if it doesn't exist.
+		if _, err := os.Open(Global.Storage.Path); os.IsNotExist(err) {
+			err = os.MkdirAll(Global.Storage.Path, os.ModePerm)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Grab Disk Usage Stats
+		dStat, err := disk.Usage(Global.Storage.Path)
+		if err != nil {
+			return err
+		}
+
+		// Get Disk Size from Config
+		cSize, err := humanize.ParseBytes(Global.Storage.Limit)
+		if err != nil {
+			return err
+		}
+
+		// Check if the detected disk size is smaller than the disk limit
+		if dStat != nil && cSize > dStat.Free {
+			Global.Storage.Limit = humanize.Bytes(dStat.Free)
+		}
+	}
+
+	// Write config file
+	err = writeFile(path, &Global)
+	return err
 }
 
-func createSwarmKey() (err error) {
-	keyData := []byte(`/key/swarm/psk/1.0.0/
-/base16/
-793bdb68b7cfd2f49071a299711df51f1c60283a047e4a8756a5c3a3d1ab776f`)
+func parseFile(path string, in *config) error {
+	_, err := toml.DecodeFile(path, in)
+	return err
+}
 
-	os.MkdirAll(Global.Sources.Storage, os.ModePerm)
-	err = ioutil.WriteFile(filepath.Join(Global.Sources.Storage, "swarm.key"), keyData, 0644)
+func sourceEnv(in *config) error {
+	numSubStructs := reflect.ValueOf(in).Elem().NumField()
+	// Check for env args matching each of the sub structs.
+	for i := 0; i < numSubStructs; i++ {
+		iter := reflect.ValueOf(in).Elem().Field(i)
+		subStruct := strings.ToUpper(iter.Type().Name())
+		structType := iter.Type()
+		for j := 0; j < iter.NumField(); j++ {
+			fieldVal := iter.Field(j).String()
+			fieldName := structType.Field(j).Name
+			evName := "ARKEN" + "_" + subStruct + "_" + strings.ToUpper(fieldName)
+			evVal, evExists := os.LookupEnv(evName)
+			if evExists && evVal != fieldVal {
+				iter.FieldByName(fieldName).SetString(evVal)
+			}
+		}
+	}
+	return nil
+}
+
+func writeFile(path string, in *config) error {
+	buf := new(bytes.Buffer)
+	err := toml.NewEncoder(buf).Encode(in)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(path, buf.Bytes(), os.ModePerm)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(filepath.Dir(path), os.ModePerm)
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile(path, buf.Bytes(), os.ModePerm)
+	}
 	return err
 }
