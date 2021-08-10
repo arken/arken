@@ -43,6 +43,7 @@ type manifest struct {
 	Replications   string `toml:"replications,omitempty"`
 	StatsNode      string `toml:"stats_node,omitempty"`
 	URL            string `toml:"url"`
+	Path           string `toml:"path"`
 }
 
 type network struct {
@@ -55,7 +56,6 @@ type stats struct {
 }
 
 func Init(path string) error {
-
 	// Generate the default config
 	Global = config{
 		Database: database{
@@ -66,7 +66,8 @@ func Init(path string) error {
 			Path:  filepath.Join(filepath.Dir(path), "storage"),
 		},
 		Manifest: manifest{
-			URL: "https://github.com/arken/core-manifest",
+			URL:  "https://github.com/arken/core-manifest",
+			Path: filepath.Join(filepath.Dir(path), "manifest"),
 		},
 		Network: network{
 			Limit: "500GB",
