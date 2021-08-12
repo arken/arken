@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"fmt"
 	"os/user"
 	"path/filepath"
 
 	"github.com/DataDrake/cli-ng/v2/cmd"
 	"github.com/arken/arken/config"
+	"github.com/arken/arken/manifest"
 )
 
 func init() {
@@ -39,11 +41,13 @@ func RunDaemon(r *cmd.Root, s *cmd.Sub) {
 	err = config.Init(path)
 	checkError(rFlags, err)
 
-	// // Initialize the node's manifest
-	// manifest, err := manifest.Init(
-	// 	config.Global.Manifest.Path,
-	// 	config.Global.Manifest.URL,
-	// )
-	// checkError(rFlags, err)
+	// Initialize the node's manifest
+	manifest, err := manifest.Init(
+		config.Global.Manifest.Path,
+		config.Global.Manifest.URL,
+	)
+	checkError(rFlags, err)
+
+	fmt.Println(manifest)
 
 }
