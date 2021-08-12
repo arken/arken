@@ -1,0 +1,26 @@
+name: Linux Unit Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  linux-unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    container:
+      image: golang:latest
+    steps:
+      - name: setup go
+        uses: actions/setup-go@v2
+        
+      - name: checkout code
+        uses: actions/checkout@v2
+
+      - name: run tests
+        run: |
+          go test -v ./...

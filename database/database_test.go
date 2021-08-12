@@ -3,32 +3,15 @@ package database
 import (
 	"database/sql"
 	"sync"
-	"time"
 
 	_ "github.com/mattn/go-sqlite3" // Import sqlite driver for database interaction.
 )
 
-// DB is a wrapper for the database.
-type DB struct {
-	conn *sql.DB
-	lock sync.Mutex
-}
-
-// File is a struct of info for a file within Arken.
-type File struct {
-	ID           string
-	Name         string
-	Size         int64
-	Status       string
-	Modified     time.Time
-	Replications int
-}
-
-// Init opens and connects to the database.
-func Init(path string) (result *DB, err error) {
-	db, err := sql.Open("sqlite3", path+"?cache=shared&mode=memory")
+// openMock opens up a mock DB for unit testing purposes.
+func openMock() (result *DB, err error) {
+	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	// Create the nodes table if is doesn't already exist.
@@ -44,13 +27,12 @@ func Init(path string) (result *DB, err error) {
 			PRIMARY KEY(id)
 		);`,
 	)
-	if err != nil {
-		return nil, err
-	}
 
 	result = &DB{
 		conn: db,
 		lock: sync.Mutex{},
 	}
-	return result, nil
+
+	return result, err
+
 }

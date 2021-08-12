@@ -26,7 +26,7 @@ func (db *DB) Remove(id string) (result File, err error) {
 // remove deletes an entry to the DB.
 func (db *DB) remove(id string) (err error) {
 	stmt, err := db.conn.Prepare(
-		"DELETE FROM keys WHERE id = ?")
+		"DELETE FROM files WHERE id = ?")
 	if err != nil {
 		return err
 	}
