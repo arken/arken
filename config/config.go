@@ -37,13 +37,8 @@ type storage struct {
 }
 
 type manifest struct {
-	Name           string `toml:"name,omitempty"`
-	BootstrapPeers string `toml:"bootstrap_peers,omitempty"`
-	ClusterKey     string `toml:"cluster_key,omitempty"`
-	Replications   string `toml:"replications,omitempty"`
-	StatsNode      string `toml:"stats_node,omitempty"`
-	URL            string `toml:"url"`
-	Path           string `toml:"path"`
+	URL  string `toml:"url"`
+	Path string `toml:"path"`
 }
 
 type network struct {
