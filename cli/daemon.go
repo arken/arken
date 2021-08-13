@@ -52,8 +52,8 @@ func RunDaemon(r *cmd.Root, s *cmd.Sub) {
 	)
 	checkError(rFlags, err)
 
-	added := make(chan database.File, 50)
-	removed := make(chan database.File, 50)
+	added := make(chan database.File)
+	removed := make(chan database.File)
 	errors := make(chan error)
 
 	go nodeManifest.Index(manifest.IndexOptions{
@@ -72,8 +72,6 @@ out:
 		case err := <-errors:
 			checkError(rFlags, err)
 			break out
-
 		}
 	}
-
 }

@@ -32,11 +32,7 @@ func (m *Manifest) Index(opts IndexOptions) {
 		opts.Errors <- err
 	}
 
-	r, err := git.PlainOpen(m.path)
-	if err != nil {
-		opts.Errors <- err
-	}
-	ref, err := r.Head()
+	ref, err := m.r.Head()
 	if err != nil {
 		opts.Errors <- err
 	}
@@ -47,6 +43,14 @@ func (m *Manifest) Index(opts IndexOptions) {
 	case commit == "":
 		m.IndexFull(opts)
 	}
+
+	// Save the new commit as a checkpoint
+	newCommit, err := m.r.CommitObject(ref.Hash())
+	if err != nil {
+		opts.Errors <- err
+	}
+	err = m.setCommit(newCommit.Hash.String())
+	opts.Errors <- err
 }
 
 func (m *Manifest) IndexFull(opts IndexOptions) {
@@ -85,8 +89,7 @@ func (m *Manifest) IndexFull(opts IndexOptions) {
 				fileTemplate.Name = data[1]
 
 				// Check if entry is already in the database.
-				if _, err := opts.DB.Get(fileTemplate.ID); err != nil &&
-					err == sql.ErrNoRows {
+				if _, err := opts.DB.Get(fileTemplate.ID); err == nil || err != sql.ErrNoRows {
 					continue
 				}
 
@@ -223,7 +226,5 @@ func (m *Manifest) indexDiff(opts IndexOptions) {
 			opts.Removed <- entry
 		}
 	}
-
-	err = m.setCommit(commit.Hash.String())
 	opts.Errors <- err
 }
