@@ -7,6 +7,7 @@ import (
 
 	"github.com/DataDrake/cli-ng/v2/cmd"
 	"github.com/arken/arken/config"
+	"github.com/arken/arken/database"
 	"github.com/arken/arken/manifest"
 )
 
@@ -41,13 +42,38 @@ func RunDaemon(r *cmd.Root, s *cmd.Sub) {
 	err = config.Init(path)
 	checkError(rFlags, err)
 
+	db, err := database.Init(config.Global.Database.Path)
+	checkError(rFlags, err)
+
 	// Initialize the node's manifest
-	manifest, err := manifest.Init(
+	nodeManifest, err := manifest.Init(
 		config.Global.Manifest.Path,
 		config.Global.Manifest.URL,
 	)
 	checkError(rFlags, err)
 
-	fmt.Println(manifest)
+	added := make(chan database.File, 50)
+	removed := make(chan database.File, 50)
+	errors := make(chan error)
+
+	go nodeManifest.Index(manifest.IndexOptions{
+		DB:      db,
+		Added:   added,
+		Removed: removed,
+		Errors:  errors,
+	})
+out:
+	for {
+		select {
+		case aFile := <-added:
+			fmt.Println("added:", aFile)
+		case rFile := <-removed:
+			fmt.Println("removed:", rFile)
+		case err := <-errors:
+			checkError(rFlags, err)
+			break out
+
+		}
+	}
 
 }

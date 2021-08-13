@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"time"
 )
 
 // Get searches for and returns a the corresponding entry from the
@@ -58,11 +59,63 @@ func (db *DB) GetAll(status string, limit, page int) (result []File, err error) 
 	}
 
 	rows, err := db.conn.Query(
-		"SELECT * FROM keys WHERE status = ? LIMIT ? OFFSET ?;",
+		"SELECT * FROM files WHERE status = ? LIMIT ? OFFSET ?;",
 		status,
 		limit,
 		limit*page,
 	)
+	if err != nil {
+		return result, err
+	}
+
+	// Iterate through rows found and insert them into the list.
+	for rows.Next() {
+		var f File
+
+		err = rows.Scan(
+			&f.ID,
+			&f.Name,
+			&f.Size,
+			&f.Status,
+			&f.Modified,
+			&f.Replications)
+
+		if err != nil {
+			rows.Close()
+			return nil, err
+		}
+
+		result = append(result, f)
+	}
+
+	// Check for errors and return
+	err = rows.Close()
+	return result, err
+}
+
+func (db *DB) GetAllOlderThan(age time.Time, limit, page int) (result []File, err error) {
+	// Attempt to grab lock.
+	db.lock.Lock()
+	defer db.lock.Unlock()
+
+	// Create files slice with limit as size.
+	result = make([]File, limit)
+
+	// Ping database to check that it still exists.
+	err = db.conn.Ping()
+	if err != nil {
+		return result, err
+	}
+
+	rows, err := db.conn.Query(
+		"SELECT * FROM files WHERE time < ? LIMIT ? OFFSET ?;",
+		age,
+		limit,
+		limit*page,
+	)
+	if err != nil {
+		return result, err
+	}
 
 	// Iterate through rows found and insert them into the list.
 	for rows.Next() {
