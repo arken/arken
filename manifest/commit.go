@@ -20,5 +20,12 @@ func (m *Manifest) getCommit() (string, error) {
 
 func (m *Manifest) setCommit(commit string) error {
 	// Write commit out to file.
-	return os.WriteFile(filepath.Join(m.path, "COMMIT"), []byte(commit), os.ModePerm)
+	f, err := os.Create(filepath.Join(m.path, "COMMIT"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.WriteString(commit)
+	return err
 }

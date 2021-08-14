@@ -1,36 +1,31 @@
 package ipfs
 
 import (
-	"github.com/arken/arken/database"
+	iface "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/ipfs/interface-go-ipfs-core/options"
 )
 
-// LsPin returns a list of File that are pinned on the IPFS instance.
-func (n *Node) LsPin(output chan<- database.File, errors chan<- error) {
-	defer close(output)
+// LsPin returns a list of files IDs that are pinned on the IPFS instance.
+func (n *Node) LsPin() (<-chan string, error) {
+	// Construct output channel
+	output := make(chan string)
 
 	// List all directly pinned files on the node.
 	pins, err := n.api.Pin().Ls(n.ctx, options.Pin.Ls.Direct())
 	if err != nil {
-		errors <- err
+		return nil, err
 	}
 
-	// Loop through pinned files
-	for pin := range pins {
-		cid := pin.Path().Cid().String()
-		size, err := n.GetSize(cid)
-		if err != nil {
-			continue
+	// Construct CID from pin for all files
+	go func(pins <-chan iface.Pin) {
+		// Loop through pinned files
+		for pin := range pins {
+			cid := pin.Path().Cid().String()
+			output <- cid
 		}
+		close(output)
+	}(pins)
 
-		fileTemplate := database.File{
-			ID:           cid,
-			Size:         int64(size),
-			Status:       "local",
-			Replications: -1,
-		}
-
-		output <- fileTemplate
-	}
-	errors <- nil
+	// Return output channel
+	return output, nil
 }

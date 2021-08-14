@@ -52,26 +52,15 @@ func RunDaemon(r *cmd.Root, s *cmd.Sub) {
 	)
 	checkError(rFlags, err)
 
-	added := make(chan database.File)
-	removed := make(chan database.File)
-	errors := make(chan error)
+	results, err := nodeManifest.Index(db, false)
+	checkError(rFlags, err)
 
-	go nodeManifest.Index(manifest.IndexOptions{
-		DB:      db,
-		Added:   added,
-		Removed: removed,
-		Errors:  errors,
-	})
-out:
-	for {
-		select {
-		case aFile := <-added:
-			fmt.Println("added:", aFile)
-		case rFile := <-removed:
-			fmt.Println("removed:", rFile)
-		case err := <-errors:
-			checkError(rFlags, err)
-			break out
+	for result := range results {
+		switch result.Status {
+		case "add":
+			fmt.Println("added:", result)
+		case "remove":
+			fmt.Println("removed:", result)
 		}
 	}
 }
