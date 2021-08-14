@@ -87,6 +87,7 @@ func (m *Manifest) indexFull(db *database.DB, results chan<- database.File) {
 					ID:     data[0],
 					Name:   data[1],
 					Status: "add",
+					Size:   0,
 				}
 			}
 			if err := scanner.Err(); err != nil {
@@ -171,9 +172,7 @@ func (m *Manifest) indexDiff(oldCommit string, results chan<- database.File) {
 			continue
 		}
 
-		fileTemplate := database.File{
-			Size: -1,
-		}
+		fileTemplate := database.File{}
 
 		if strings.HasPrefix(lines[i], "+") {
 

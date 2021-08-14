@@ -1,14 +1,18 @@
 package cli
 
 import (
-	"fmt"
 	"os/user"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/DataDrake/cli-ng/v2/cmd"
 	"github.com/arken/arken/config"
 	"github.com/arken/arken/database"
+	"github.com/arken/arken/engine"
+	"github.com/arken/arken/ipfs"
 	"github.com/arken/arken/manifest"
+	"github.com/go-co-op/gocron"
 )
 
 func init() {
@@ -46,21 +50,55 @@ func RunDaemon(r *cmd.Root, s *cmd.Sub) {
 	checkError(rFlags, err)
 
 	// Initialize the node's manifest
-	nodeManifest, err := manifest.Init(
+	manifest, err := manifest.Init(
 		config.Global.Manifest.Path,
 		config.Global.Manifest.URL,
 	)
 	checkError(rFlags, err)
 
-	results, err := nodeManifest.Index(db, false)
+	// Initialize embedded IPFS Node
+	ipfs, err := ipfs.CreateNode(
+		config.Global.Storage.Path,
+		ipfs.NodeConfArgs{
+			SwarmKey:       manifest.ClusterKey,
+			BootstrapPeers: manifest.BootstrapPeers,
+			StorageMax:     config.Global.Storage.Limit,
+		})
 	checkError(rFlags, err)
 
-	for result := range results {
-		switch result.Status {
-		case "add":
-			fmt.Println("added:", result)
-		case "remove":
-			fmt.Println("removed:", result)
-		}
+	// Initialize Arken Engine
+	engine := engine.Node{
+		Cfg:      &config.Global,
+		DB:       db,
+		Node:     ipfs,
+		Manifest: manifest,
 	}
+	checkError(rFlags, err)
+
+	// Create Task Scheduler
+	tasks := gocron.NewScheduler(time.UTC)
+
+	// Configure Arken Tasks
+	// Check for and sync updates to the manifest every hour.
+	tasks.Every(1).Hours().Do(engine.SyncManifest)
+
+	// Check the number of times all files in the archive are
+	// backed up to determine if any need to be replicated locally
+	// to preserve data within the archive.
+	tasks.Every(1).Days().Do(engine.Rebalance)
+
+	// Verify database consistency against manifest
+	tasks.Every(1).Weeks().Do(engine.VerifyDB)
+
+	// Very datastore consistency against database
+	tasks.Every(1).Weeks().Do(engine.VerifyDatastore)
+
+	// If stats are enabled send stats to the manifest stats peer.
+	if strings.ToLower(config.Global.Stats.Enabled) == "yes" {
+		tasks.Every(1).Hours().Do(engine.ReportStats)
+	}
+
+	// Start Task Scheduler
+	tasks.StartBlocking()
+
 }

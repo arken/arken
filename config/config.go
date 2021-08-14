@@ -16,10 +16,10 @@ var (
 	// Version is the current version of Arken
 	Version string = "develop"
 	// Global is the global application configuration
-	Global config
+	Global Config
 )
 
-type config struct {
+type Config struct {
 	Database database `toml:"database"`
 	Storage  storage  `toml:"storage"`
 	Manifest manifest `toml:"manifest"`
@@ -52,7 +52,7 @@ type stats struct {
 
 func Init(path string) error {
 	// Generate the default config
-	Global = config{
+	Global = Config{
 		Database: database{
 			Path: filepath.Join(filepath.Dir(path), "arken.db"),
 		},
@@ -120,12 +120,12 @@ func Init(path string) error {
 	return err
 }
 
-func parseFile(path string, in *config) error {
+func parseFile(path string, in *Config) error {
 	_, err := toml.DecodeFile(path, in)
 	return err
 }
 
-func sourceEnv(in *config) error {
+func sourceEnv(in *Config) error {
 	numSubStructs := reflect.ValueOf(in).Elem().NumField()
 	// Check for env args matching each of the sub structs.
 	for i := 0; i < numSubStructs; i++ {
@@ -145,7 +145,7 @@ func sourceEnv(in *config) error {
 	return nil
 }
 
-func writeFile(path string, in *config) error {
+func writeFile(path string, in *Config) error {
 	buf := new(bytes.Buffer)
 	err := toml.NewEncoder(buf).Encode(in)
 	if err != nil {

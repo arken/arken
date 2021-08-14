@@ -3,6 +3,7 @@ package ipfs
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -20,10 +21,8 @@ import (
 )
 
 type NodeConfArgs struct {
-	Addr           string
-	PeerID         string
-	PrivKey        string
 	SwarmKey       string
+	StorageMax     string
 	BootstrapPeers []string
 }
 
@@ -40,11 +39,6 @@ func (n *Node) SetHandler(protocolID string, handler network.StreamHandler) {
 
 // CreateNode creates an IPFS node and returns its coreAPI
 func CreateNode(repoPath string, args NodeConfArgs) (node *Node, err error) {
-	// Initialize Node ID
-	id := ipfsConfig.Identity{
-		PeerID:  args.PeerID,
-		PrivKey: args.PrivKey,
-	}
 	// Setup IPFS plugins
 	if err := setupPlugins(repoPath); err != nil {
 		return nil, err
@@ -63,7 +57,12 @@ func CreateNode(repoPath string, args NodeConfArgs) (node *Node, err error) {
 	// Open the repo
 	fs, err := openFs(node.ctx, repoPath)
 	if err != nil {
-		err = createFs(node.ctx, repoPath, args.Addr, id, args.BootstrapPeers)
+		err = createFs(
+			node.ctx,
+			repoPath,
+			args.StorageMax,
+			args.BootstrapPeers,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -108,26 +107,23 @@ func openFs(ctx context.Context, repoPath string) (result repo.Repo, err error) 
 }
 
 // createFs builds the IPFS configuration repository.
-func createFs(ctx context.Context, path, addr string, id ipfsConfig.Identity, bootstrapPeers []string) (err error) {
+func createFs(ctx context.Context, path string, storageMax string, bootstrapPeers []string) (err error) {
 	// Check if directory to configuration exists
 	if _, err = os.Stat(path); os.IsNotExist(err) {
 		os.MkdirAll(path, os.ModePerm)
 	}
 	// Create a ipfsConfig with default options and a 2048 bit key
-	cfg, err := ipfsConfig.InitWithIdentity(id)
+	cfg, err := ipfsConfig.Init(ioutil.Discard, 2048)
 	if err != nil {
 		return err
 	}
 	// Set default ipfsConfig values
-	cfg.Datastore.StorageMax = "5GB"
+	cfg.Datastore.StorageMax = storageMax
 	cfg.Reprovider.Strategy = "roots"
 	cfg.Routing.Type = "dhtserver"
 	cfg.Bootstrap = bootstrapPeers
 	cfg.Swarm.ConnMgr.HighWater = 1200
 	cfg.Swarm.ConnMgr.LowWater = 1000
-	if addr != "" {
-		cfg.Addresses.Announce = []string{addr}
-	}
 
 	// Create the repo with the ipfsConfig
 	err = fsrepo.Init(path, cfg)

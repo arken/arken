@@ -8,7 +8,7 @@ import (
 )
 
 // GetSize returns the size of the specified file.
-func (n *Node) GetSize(hash string) (size int, err error) {
+func (n *Node) GetSize(hash string) (size int64, err error) {
 	// Construct new IPFS CID
 	path := icorepath.New("/ipfs/" + hash)
 
@@ -27,5 +27,5 @@ func (n *Node) GetSize(hash string) (size int, err error) {
 	if err != nil {
 		return -1, err
 	}
-	return obj.CumulativeSize, err
+	return int64(obj.CumulativeSize), err
 }
