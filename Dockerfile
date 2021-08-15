@@ -3,6 +3,8 @@
 # Start from the latest golang base image
 FROM golang:latest as builder
 
+ARG version
+
 # Add Maintainer Info
 LABEL maintainer="Alec Scott <alecbcs@github.com>"
 
@@ -19,7 +21,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go app
-RUN go build -o arken .
+RUN go build -ldflags "-s -w -X github.com/arken/arken/config.Version=$version" -o arken .
 
 # Start again with minimal envoirnment.
 FROM debian:stable-slim
@@ -33,4 +35,4 @@ WORKDIR /app
 COPY --from=builder /app/arken /app/arken
 
 # Command to run the executable
-CMD ["./arken"]
+CMD ["/app/arken daemon"]
