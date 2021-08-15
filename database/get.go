@@ -90,6 +90,14 @@ func (db *DB) GetAll(status string, limit, page int) (result []File, err error) 
 
 	// Check for errors and return
 	err = rows.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result) <= 0 {
+		return nil, sql.ErrNoRows
+	}
+
 	return result, err
 }
 
@@ -139,5 +147,13 @@ func (db *DB) GetAllOlderThan(age time.Time, limit, page int) (result []File, er
 
 	// Check for errors and return
 	err = rows.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result) <= 0 {
+		return nil, sql.ErrNoRows
+	}
+
 	return result, err
 }

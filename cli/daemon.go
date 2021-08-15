@@ -95,7 +95,7 @@ func RunDaemon(r *cmd.Root, s *cmd.Sub) {
 	tasks.Every(1).Weeks().Do(engine.VerifyDatastore)
 
 	// If stats are enabled send stats to the manifest stats peer.
-	if strings.ToLower(config.Global.Stats.Enabled) == "yes" {
+	if strings.ToLower(config.Global.Stats.Enabled) == "true" {
 		tasks.Every(1).Hours().Do(engine.ReportStats)
 	}
 
