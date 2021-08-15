@@ -16,8 +16,6 @@ import (
 	"github.com/ipfs/go-ipfs/repo/fsrepo"
 	migrate "github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 	icore "github.com/ipfs/interface-go-ipfs-core"
-	"github.com/libp2p/go-libp2p-core/network"
-	"github.com/libp2p/go-libp2p-core/protocol"
 )
 
 type NodeConfArgs struct {
@@ -31,10 +29,6 @@ type Node struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	node   *core.IpfsNode
-}
-
-func (n *Node) SetHandler(protocolID string, handler network.StreamHandler) {
-	n.node.PeerHost.SetStreamHandler(protocol.ID(protocolID), handler)
 }
 
 // CreateNode creates an IPFS node and returns its coreAPI

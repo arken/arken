@@ -10,6 +10,7 @@ import (
 	"github.com/arken/arken/database"
 	"github.com/arken/arken/ipfs"
 	"github.com/arken/arken/manifest"
+	"github.com/dustin/go-humanize"
 )
 
 type Node struct {
@@ -23,18 +24,23 @@ type Node struct {
 func (n *Node) FileAdder() (chan<- database.File, error) {
 	input := make(chan database.File, 10)
 
+	storageMax, err := humanize.ParseBytes(n.Cfg.Storage.Limit)
+	if err != nil {
+		return nil, err
+	}
+
 	// Determine the possible number of threads for the system's CPU
 	workers := genNumWorkers()
 
 	// Generate Worker Threads
 	for i := 0; i < workers; i++ {
-		go n.addWorker(input)
+		go n.addWorker(input, int64(storageMax))
 	}
 
 	return input, nil
 }
 
-func (n *Node) addWorker(input <-chan database.File) {
+func (n *Node) addWorker(input <-chan database.File, storageMax int64) {
 	for file := range input {
 		// Check the number of times a file is replicated across the cluster.
 		replications, err := n.Node.FindProvs(file.ID, int(n.Manifest.Replications))
@@ -64,11 +70,24 @@ func (n *Node) addWorker(input <-chan database.File) {
 					log.Println(err)
 					continue
 				}
+
+				repoSize, err := n.Node.RepoSize()
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+
+				if file.Size+repoSize >= storageMax {
+					continue
+				}
+
 				err = n.Node.Pin(file.ID)
 				if err != nil {
 					log.Println(err)
 					continue
 				}
+
+				file.Status = "local"
 			}
 		}
 

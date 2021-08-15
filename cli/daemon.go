@@ -72,6 +72,7 @@ func RunDaemon(r *cmd.Root, s *cmd.Sub) {
 		DB:       db,
 		Node:     ipfs,
 		Manifest: manifest,
+		Verbose:  rFlags.Verbose,
 	}
 	checkError(rFlags, err)
 

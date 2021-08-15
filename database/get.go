@@ -50,7 +50,7 @@ func (db *DB) GetAll(status string, limit, page int) (result []File, err error) 
 	defer db.lock.Unlock()
 
 	// Create files slice with limit as size.
-	result = make([]File, limit)
+	result = []File{}
 
 	// Ping database to check that it still exists.
 	err = db.conn.Ping()

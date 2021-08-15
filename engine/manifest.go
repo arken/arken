@@ -31,6 +31,12 @@ func (n *Node) SyncManifest() {
 		}
 	}
 
+	// Update manifest settings
+	err = n.Manifest.Decode()
+	if err != nil {
+		log.Println(err)
+	}
+
 	// Index changes from manifest
 	files, err := n.Manifest.Index(n.DB, false)
 	if err != nil {
