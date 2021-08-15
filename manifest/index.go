@@ -58,12 +58,12 @@ func (m *Manifest) indexFull(db *database.DB, results chan<- database.File) {
 
 	// Walk through entire repository directory structure to look for .ks files.
 	err := filepath.Walk(m.path, func(path string, info os.FileInfo, err error) error {
-		// On each interation of the "walk" this function will check if a keyset
+		// On each interation of the "walk" this function will check if a manifest
 		// file and parse for file IDs if true.
 		if strings.HasSuffix(filepath.Base(path), ".ks") {
 			file, err := os.Open(path)
 
-			// This shouldn't be an error unless part of the keyset was
+			// This shouldn't be an error unless part of the manifest was
 			// corrupted in transit.
 			if err != nil {
 				return err
