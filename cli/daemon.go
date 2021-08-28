@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -41,6 +42,8 @@ func RunDaemon(r *cmd.Root, s *cmd.Sub) {
 	if rFlags.Config != "" {
 		path = rFlags.Config
 	}
+
+	fmt.Println("Setting up daemon...")
 
 	// Initialize the node's configuration
 	err = config.Init(path)
@@ -96,10 +99,12 @@ func RunDaemon(r *cmd.Root, s *cmd.Sub) {
 
 	// If stats are enabled send stats to the manifest stats peer.
 	if strings.ToLower(config.Global.Stats.Enabled) == "true" {
+		fmt.Printf("Stats reporting: enabled\n")
 		tasks.Every(1).Hours().Do(engine.ReportStats)
 	}
 
 	// Start Task Scheduler
+	fmt.Printf("Daemon setup and running\n\n")
 	tasks.StartBlocking()
 
 }

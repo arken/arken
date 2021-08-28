@@ -107,7 +107,7 @@ func (db *DB) GetAllOlderThan(age time.Time, limit, page int) (result []File, er
 	defer db.lock.Unlock()
 
 	// Create files slice with limit as size.
-	result = make([]File, limit)
+	result = []File{}
 
 	// Ping database to check that it still exists.
 	err = db.conn.Ping()
@@ -116,7 +116,7 @@ func (db *DB) GetAllOlderThan(age time.Time, limit, page int) (result []File, er
 	}
 
 	rows, err := db.conn.Query(
-		"SELECT * FROM files WHERE time < ? LIMIT ? OFFSET ?;",
+		"SELECT * FROM files WHERE modified < ? LIMIT ? OFFSET ?;",
 		age,
 		limit,
 		limit*page,

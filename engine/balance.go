@@ -7,6 +7,7 @@ import (
 )
 
 func (n *Node) Rebalance() {
+	fmt.Printf("Starting Data Rebalance...\n")
 	// Boot adder subsystem
 	toAdder, err := n.FileAdder()
 	if err != nil {
@@ -29,4 +30,5 @@ func (n *Node) Rebalance() {
 	if err != nil && err != sql.ErrNoRows {
 		fmt.Println(err)
 	}
+	fmt.Printf("Data Rebalance Finished\n")
 }

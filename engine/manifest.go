@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -9,6 +10,8 @@ import (
 )
 
 func (n *Node) SyncManifest() {
+	fmt.Printf("Starting Manifest Import...\n")
+
 	// Pull changes from upstream manifest
 	err := n.Manifest.Pull()
 	if err != nil {
@@ -96,4 +99,6 @@ func (n *Node) SyncManifest() {
 		log.Println(err)
 		return
 	}
+
+	fmt.Printf("Successfully imported & updated manifest\n")
 }

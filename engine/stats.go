@@ -2,6 +2,7 @@ package engine
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/dustin/go-humanize"
@@ -14,6 +15,8 @@ type report struct {
 }
 
 func (n *Node) ReportStats() {
+	fmt.Printf("Sending Stats to Cluster...\n")
+
 	gb, err := humanize.ParseBytes("1GB")
 	if err != nil {
 		log.Println(err)
@@ -49,4 +52,5 @@ func (n *Node) ReportStats() {
 		log.Println(err)
 		return
 	}
+	fmt.Printf("Stats sent successfully\n")
 }

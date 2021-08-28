@@ -1,8 +1,12 @@
 package engine
 
-import "log"
+import (
+	"fmt"
+	"log"
+)
 
 func (n *Node) VerifyDB() {
+	fmt.Printf("Starting Database Verification...\n")
 	// Check for missmatches between database and manifest
 	files, err := n.Manifest.Index(n.DB, true)
 	if err != nil {
@@ -62,4 +66,5 @@ func (n *Node) VerifyDB() {
 		log.Println(err)
 		return
 	}
+	fmt.Printf("Database Verification Complete\n")
 }

@@ -6,6 +6,8 @@ import (
 )
 
 func (n *Node) VerifyDatastore() {
+	fmt.Printf("Starting Datastore Verification...\n")
+
 	// Check for broken/corrupt blocks in the datastore.
 	broken, err := n.Node.Verify()
 	if err != nil {
@@ -33,4 +35,5 @@ func (n *Node) VerifyDatastore() {
 			continue
 		}
 	}
+	fmt.Printf("Datastore Verification Complete\n")
 }
