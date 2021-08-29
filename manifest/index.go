@@ -78,7 +78,17 @@ func (m *Manifest) indexFull(db *database.DB, results chan<- database.File) {
 				data := strings.Fields(scanner.Text())
 
 				// Check if entry is already in the database.
-				if _, err := db.Get(data[0]); err == nil || err != sql.ErrNoRows {
+				if file, err := db.Get(data[0]); err == nil || err != sql.ErrNoRows {
+					if err == nil {
+						// Update file name if changed
+						file.Name = data[1]
+
+						// Update existing entry in db to modify time
+						_, err = db.Update(file)
+						if err != nil {
+							return err
+						}
+					}
 					continue
 				}
 
