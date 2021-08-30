@@ -24,7 +24,7 @@ COPY . .
 RUN go build -ldflags "-s -w -X github.com/arken/arken/config.Version=$version" -o arken .
 
 # Start again with minimal envoirnment.
-FROM debian:stable-slim
+FROM ubuntu:18.04
 
 RUN apt-get update && \
     apt-get install -y ca-certificates
