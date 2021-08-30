@@ -35,4 +35,4 @@ WORKDIR /app
 COPY --from=builder /app/arken /app/arken
 
 # Command to run the executable
-CMD ["/app/arken daemon"]
+CMD ["/app/arken", "daemon"]
