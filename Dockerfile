@@ -26,8 +26,8 @@ RUN go build -ldflags "-s -w -X github.com/arken/arken/config.Version=$version" 
 # Start again with minimal envoirnment.
 FROM debian:stable-slim
 
-RUN apt update && \
-    apt install -y ca-certificates
+RUN apt-get update && \
+    apt-get install -y ca-certificates
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
