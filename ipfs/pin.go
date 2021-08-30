@@ -6,12 +6,11 @@ import (
 )
 
 // Pin a file to local storage.
-func Pin(hash string) (err error) {
+func (n *Node) Pin(hash string) error {
+	// Construct IPFS CID
 	path := icorepath.New("/ipfs/" + hash)
 
-	err = ipfs.Pin().Add(ctx, path, func(input *options.PinAddSettings) error {
-		input.Recursive = true
-		return nil
-	})
+	// Pin file to local storage within IPFS
+	err := n.api.Pin().Add(n.ctx, path, options.Pin.Recursive(true))
 	return err
 }

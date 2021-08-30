@@ -10,8 +10,8 @@ A Distributed Digital Archive Built for the World's Open Source and Scientific D
 
 - [A Bit of Backstory](#a-bit-of-backstory)
 - [What is Arken?](#what-is-arken)
-  - [What's a Keyset](#whats-a-keyset)
-    - [Keyset Security](#keyset-security)
+  - [What's a manifest](#whats-a-manifest)
+    - [Manifest Security](#manifest-security)
     - [Rebalancing Data Across the Community](#rebalancing-data-across-the-community)
 - [Getting Started](#getting-started)
 - [What's the process as someone who want's to backup important data?](#what's-the-process-as-someone-who-want's-to-backup-important-data?)
@@ -27,19 +27,19 @@ The goal of Arken is to build an autonomous system for organizing, balancing, an
 can donate their extra space. 
 
 ```
-+------------GitHub/GitLab/GitTea------------+
-|    +--------+   +--------+    +--------+   |
-|    | Keyset |   | Keyset |    | Keyset |   |
-|    +----|---+   +----|\--+    +----|---+   |
-+---------|------------|-\-----------|-------+
-          |            |  \          /\
-          |            |   \        /  \
-          |            |    \      /    \
-          |            |     \    /      \
-          |            |      \  /        \
-          |            |       \/          \
-          v            v        v           \
-       [Arken]     [Arken]<-->[Arken]<--->[Arken]
++-------------GitHub/GitLab/GitTea-----------------+
+|    +----------+   +----------+    +----------+   |
+|    | manifest |   | manifest |    | manifest |   |
+|    +-----|----+   +-----|\---+    +-----|----+   |
++----------|--------------|-\-------------|--------+
+           |              |  \           /\
+           |              |   \         /  \
+           |              |    \       /    \
+           |              |     \     /      \
+           |              |      \   /        \
+           |              |       \ /          \
+           v              v        v            v
+        [Arken]       [Arken]<-->[Arken]<--->[Arken]
 ```
 
 # What is Arken?
@@ -49,22 +49,22 @@ calculates which important files are hosted by the fewest number of other nodes 
 locally backed up to reduce the risk of data loss. Arken also knows how much space it's using on your system and will 
 respect limits you set by locally deleting data that is backed up by more than 10% of the cluster. 
 
-### What's a Keyset?
+### What's a Manifest?
 
-Arken uses Keysets to transparently keep track of which files are important to the network and should be
-monitored and backed up if needed. Unlike a Pinset in an IPFS cluster, a Keyset is simply a plain text git repository
-made of up file identifiers. Additionally, Keysets are easy to audit so you can actually know what data you're helping
-preserve. Keyset repositories can contain an arbitrary number of directories used to organize keyset files as long as 
-they also contain a `keyset.config` YAML file. This config file provides a replication factor that is the percentage of the
+Arken uses Manifests to transparently keep track of which files are important to the network and should be
+monitored and backed up if needed. Unlike a Pinset in an IPFS cluster, a manifest is simply a plain text git repository
+made of up file identifiers. Additionally, Manifests are easy to audit so you can actually know what data you're helping
+preserve. manifest repositories can contain an arbitrary number of directories used to organize manifest files as long as 
+they also contain a `config` TOML file. This config file provides a replication factor that is the number of nodes in the
 total network that should be storing a file at any given time.
 
-While Keysets tell Arken which files should be stored on the subscribed nodes, they don't contain any of the
-data to be backed up onto the network. To import data to a Keyset, users add files to IPFS and record the File 
-Identifiers (IPFS CID) to a keyset file. From there, nodes will begin pulling data directly from the user to the cluster.
+While Manifests tell Arken which files should be stored on the subscribed nodes, they don't contain any of the
+data to be backed up onto the network. To import data to a manifest, users add files to IPFS and record the File 
+Identifiers (IPFS CID) to a manifest file. From there, nodes will begin pulling data directly from the user to the cluster.
 
-##### Keyset Security
+##### Manifest Security
 
-Since Keysets are openly available through Git repositories, they can be easily audited but can only be changed by 
+Since Manifests are openly available through Git repositories, they can be easily audited but can only be changed by 
 users who have access to those Git repositories or through pull requests.
 
 ##### Rebalancing Data Across the Community
@@ -94,7 +94,7 @@ docker run -d --name arken \
  -e ARKEN_SOURCES_REPOSITORIES=/data/repositories \
  -e ARKEN_SOURCES_STORAGE=/data/storage \
  -p 4001:4001 \
- --restart=always arken/arken
+ --restart=always ghcr.io/arken/arken
 ```
 
 ##### Go Package:
@@ -109,16 +109,16 @@ go run arken
 Let's say that you are a scholar who wants to preserve some important works of humanity, or a researcher who wants 
 to back up the DNA of an extinct animal/plant. How would you go about adding your data to the distributed file system? 
 First, you would download & run the [Arken Import Tool](https://github.com/arken/ait). Using the Arken Import tool you can create 
-a Keyset file of the IPFS identifiers for your data. At this point you can either upload the Keyset to your own Git 
+a manifest file of the IPFS identifiers for your data. At this point you can either upload the manifest to your own Git 
 repository (this is best if you want to run your own pool of workers) or make an application to put your data in the
-Core Keyset repository. The Core Keyset repository consists of extremely important data to preserve and is what the 
+Core manifest repository. The Core manifest repository consists of extremely important data to preserve and is what the 
 community donating their extra disk space uses by default.
 
 ### What's the process as someone donating their extra storage space?
 
 Old computers or servers with some empty storage space make excellent Arken nodes. Check out our guide for configuring a Raspberry Pi with Docker and External Storage Arken [here](https://github.com/arken/arken/blob/master/docs/raspberry-pi-setup.md). After installing the 
-Arken program, you can configure it either through environment variables or the Arken configuration file located at `~/.arken/`. You can check out an example of an Arken Docker-Compose file [here](https://github.com/arken/arken/blob/master/docs/examples/docker-compose.yml). The core Keyset will be available by default, but because Keysets are just Git repositories, you can add and use 
-any Keyset you'd like. For example, you can donate space to the core community pool but also sync a custom Keyset of 
+Arken program, you can configure it either through environment variables or the Arken configuration file located at `~/.arken/`. You can check out an example of an Arken Docker-Compose file [here](https://github.com/arken/arken/blob/master/docs/examples/docker-compose.yml). The core manifest will be available by default, but because Manifests are just Git repositories, you can add and use 
+any manifest you'd like. For example, you can donate space to the core community pool but also sync a custom manifest of 
 some vacation pictures amongst yours and a few friends' machines.
 
 After the configuration, that's it! Arken will continue to run in the background, determining files with the fewest 

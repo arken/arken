@@ -2,53 +2,55 @@ package database
 
 import (
 	"database/sql"
-	"log"
 	"time"
 )
 
-// Add inserts an entry into the database if it doesn't exist already.
-func Add(db *sql.DB, input FileKey) (err error) {
-	_, err = Get(db, input.ID)
+// Add inserts a File entry into the database if it doesn't exist already.
+func (db *DB) Add(input File) (err error) {
+	// Attempt to grab lock.
+	db.lock.Lock()
+	defer db.lock.Unlock()
+
+	// Ping the DB and open a connection if necessary
+	err = db.conn.Ping()
 	if err != nil {
-		if err.Error() == "entry not found" {
-			Insert(db, input)
+		return err
+	}
+
+	_, err = db.get(input.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = db.insert(input)
 		} else {
 			return err
 		}
 	} else {
-		err = Update(db, input)
-		if err != nil {
-			return err
-		}
+		err = db.update(input)
 	}
-	return nil
+	return err
 }
 
-// Insert adds a Keyset file entry to the database.
-func Insert(db *sql.DB, entry FileKey) {
-	stmt, err := db.Prepare(
-		`INSERT INTO keys(
+// Insert adds a Node entry to the database.
+func (db *DB) insert(entry File) (err error) {
+	stmt, err := db.conn.Prepare(
+		`INSERT INTO files(
 			id,
 			name,
 			size,
 			status,
-			keyset,
 			modified,
 			replications
-		) VALUES(?,?,?,?,?,?,?);`)
+		) VALUES(?,?,?,?,?,?);`)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	_, err = stmt.Exec(
 		entry.ID,
 		entry.Name,
 		entry.Size,
 		entry.Status,
-		entry.KeySet,
 		time.Now().UTC(),
-		entry.Replications)
-
-	if err != nil {
-		log.Fatal(err)
-	}
+		entry.Replications,
+	)
+	return err
 }

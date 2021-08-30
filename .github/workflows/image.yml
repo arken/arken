@@ -1,8 +1,9 @@
-name: arken build
+name: Build Arken Container
 
 on:
   push:
-    branches: master
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
   schedule:
     - cron: '0 0 1 * *'
 
@@ -12,15 +13,36 @@ jobs:
     steps:
       - name: checkout code
         uses: actions/checkout@v2
-      - name: install buildx
-        id: buildx
-        uses: crazy-max/ghaction-docker-buildx@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1 
         with:
-          version: latest
-      - name: login to docker hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-      - name: build the image
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker Login
+        # Don't log into registry on pull request
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v1 
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set Current Version Value
         run: |
-          docker buildx build --push \
-            --tag arkenproject/arken:latest \
-            --platform linux/amd64,linux/arm/v6,linux/arm64 .
+          echo "RELEASE_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
+  
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64,linux/arm/v6
+          push: true
+          build-args: version=${{ env.RELEASE_VERSION }}
+          tags: |
+            ghcr.io/arken/arken:latest
+            arkenproject/arken:latest

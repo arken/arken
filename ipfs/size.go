@@ -8,20 +8,24 @@ import (
 )
 
 // GetSize returns the size of the specified file.
-func GetSize(hash string) (size int, err error) {
+func (n *Node) GetSize(hash string) (size int64, err error) {
+	// Construct new IPFS CID
 	path := icorepath.New("/ipfs/" + hash)
-	contxt, cancl := context.WithTimeout(ctx, 20*time.Second)
 
-	obj, err := ipfs.Object().Stat(contxt, path)
+	// Create new context with a timeout
+	contxt, cancel := context.WithTimeout(n.ctx, 20*time.Second)
+	defer cancel()
+
+	// Get stats on an object.
+	obj, err := n.api.Object().Stat(contxt, path)
 	if err != nil {
-		cancl()
 		return -1, err
 	}
+
+	// Check for errors within the context.
 	err = contxt.Err()
 	if err != nil {
-		cancl()
 		return -1, err
 	}
-	cancl()
-	return obj.CumulativeSize, err
+	return int64(obj.CumulativeSize), err
 }

@@ -3,90 +3,111 @@ package engine
 import (
 	"fmt"
 	"log"
-	"path/filepath"
+	"math/rand"
 	"runtime"
-	"strings"
 
 	"github.com/arken/arken/config"
 	"github.com/arken/arken/database"
 	"github.com/arken/arken/ipfs"
+	"github.com/arken/arken/manifest"
+	"github.com/dustin/go-humanize"
 )
 
-// NetworkLimit is true if the node has hit it's download limit for the month.
-var NetworkLimit bool
-var keysets map[string]int
+type Node struct {
+	Cfg      *config.Config
+	DB       *database.DB
+	Node     *ipfs.Node
+	Manifest *manifest.Manifest
+	Verbose  bool
+}
 
-// Run manages balancing new and at risk files
-// between nodes.
-func Run(new, remotes, output chan database.FileKey) (err error) {
-	keysets = make(map[string]int)
-	input := make(chan database.FileKey, 10)
+func (n *Node) FileAdder() (chan<- database.File, error) {
+	input := make(chan database.File, 10)
 
-	for set := range config.Keysets {
-		name := strings.Split(filepath.Base(config.Keysets[set].URL), ".")[0]
-		keysets[name] = config.Keysets[set].Replications
+	storageMax, err := humanize.ParseBytes(n.Cfg.Storage.Limit)
+	if err != nil {
+		return nil, err
 	}
 
 	// Determine the possible number of threads for the system's CPU
 	workers := genNumWorkers()
+
 	// Generate Worker Threads
 	for i := 0; i < workers; i++ {
-		go runWorker(keysets, input, output, i)
+		go n.addWorker(input, int64(storageMax))
 	}
 
-	for {
-		if NetworkLimit {
-			select {
-			case entry := <-new:
-				output <- entry
-				continue
-			case entry := <-remotes:
-				output <- entry
-				continue
-			}
-		} else {
-			select {
-			case entry := <-new:
-				input <- entry
-				continue
-			case entry := <-remotes:
-				input <- entry
-				continue
+	return input, nil
+}
+
+func (n *Node) addWorker(input <-chan database.File, storageMax int64) {
+	for file := range input {
+		// Check the number of times a file is replicated across the cluster.
+		replications, err := n.Node.FindProvs(file.ID, int(n.Manifest.Replications))
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		// If in verbose mode display print out of replications
+		if n.Verbose {
+			fmt.Printf("File: %s is backed up %d time(s) and the threshold is %d.\n",
+				file.ID, replications, n.Manifest.Replications,
+			)
+		}
+
+		// If file is replicated at least once but not enough times attempt to pin in
+		// locally if activation energy is high enough.
+		if replications < int(n.Manifest.Replications) && replications >= 1 {
+			activationEnergy := float32(replications) / float32(n.Manifest.Replications)
+			prob := rand.Float32()
+
+			// If the probability of pulling is greater than activation energy
+			// then pull the file locally.
+			if prob > activationEnergy {
+				file.Size, err = n.Node.GetSize(file.ID)
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+
+				repoSize, err := n.Node.RepoSize()
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+
+				if file.Size+repoSize >= storageMax {
+					continue
+				}
+
+				err = n.Node.Pin(file.ID)
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+
+				file.Status = "local"
 			}
 		}
 
+		// Update the number of times replicated to the database
+		file.Replications = replications
+
+		// Update entry in database
+		_, err = n.DB.Update(file)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
 	}
 }
 
-// Generate the number of worker processes to optimize efficiency.
+// genNumWorkers generates a number of worker processes to optimize efficiency.
 // Subtract 2 from the number of cores because of the main thread and the GetAll function.
 func genNumWorkers() int {
 	if runtime.NumCPU() > 2 {
 		return runtime.NumCPU() - 1
 	}
 	return 1
-}
-
-func runWorker(keysets map[string]int, input <-chan database.FileKey, output chan<- database.FileKey, num int) {
-	for key := range input {
-		threshold := keysets[key.KeySet]
-		replications, err := ipfs.FindProvs(key.ID, threshold)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if config.Flags.Verbose {
-			fmt.Printf("File: %s is backed up %d time(s) and the threshold is %d.\n", key.ID, replications, threshold)
-		}
-
-		// Determine an at risk file.
-		// Node: if a file is hosted 0 times don't try to pin it.
-		if replications < threshold && replications >= 1 {
-			key, err = ReplicateAtRiskFile(key, keysets, output)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-		key.Replications = replications
-		output <- key
-	}
 }
