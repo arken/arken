@@ -80,7 +80,10 @@ func RunDaemon(r *cmd.Root, s *cmd.Sub) {
 	checkError(rFlags, err)
 
 	// Create Task Scheduler
-	tasks := gocron.NewScheduler(time.UTC)
+	tasks := gocron.NewScheduler(time.UTC).SingletonMode()
+
+	// Set the max number of concurrent jobs to 3.
+	tasks.SetMaxConcurrentJobs(3, gocron.WaitMode)
 
 	// Configure Arken Tasks
 	// Check for and sync updates to the manifest every hour.
