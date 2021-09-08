@@ -80,30 +80,40 @@ func RunDaemon(r *cmd.Root, s *cmd.Sub) {
 	checkError(rFlags, err)
 
 	// Create Task Scheduler
-	tasks := gocron.NewScheduler(time.UTC).SingletonMode()
+	tasks := gocron.NewScheduler(time.UTC)
 
 	// Set the max number of concurrent jobs to 3.
 	tasks.SetMaxConcurrentJobs(3, gocron.WaitMode)
 
 	// Configure Arken Tasks
 	// Check for and sync updates to the manifest every hour.
-	tasks.Every(1).Hours().Do(engine.SyncManifest)
+	syncManifest, err := tasks.Every(1).Hours().Do(engine.SyncManifest)
+	checkError(rFlags, err)
+	syncManifest.SingletonMode()
 
 	// Check the number of times all files in the archive are
 	// backed up to determine if any need to be replicated locally
 	// to preserve data within the archive.
-	tasks.Every(1).Days().Do(engine.Rebalance)
+	rebalance, err := tasks.Every(1).Days().Do(engine.Rebalance)
+	checkError(rFlags, err)
+	rebalance.SingletonMode()
 
 	// Verify database consistency against manifest
-	tasks.Every(1).Weeks().Do(engine.VerifyDB)
+	verifyDB, err := tasks.Every(1).Weeks().Do(engine.VerifyDB)
+	checkError(rFlags, err)
+	verifyDB.SingletonMode()
 
 	// Very datastore consistency against database
-	tasks.Every(1).Weeks().Do(engine.VerifyDatastore)
+	verifyDS, err := tasks.Every(1).Weeks().Do(engine.VerifyDatastore)
+	checkError(rFlags, err)
+	verifyDS.SingletonMode()
 
 	// If stats are enabled send stats to the manifest stats peer.
 	if strings.ToLower(config.Global.Stats.Enabled) == "true" {
 		fmt.Printf("Stats reporting: enabled\n")
-		tasks.Every(1).Hours().Do(engine.ReportStats)
+		stats, err := tasks.Every(1).Hours().Do(engine.ReportStats)
+		checkError(rFlags, err)
+		stats.SingletonMode()
 	}
 
 	// Start Task Scheduler
