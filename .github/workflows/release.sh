@@ -2,7 +2,7 @@
 
 set -x
 assets=()
-for asset in ./ark-*; do
+for asset in ./arken-*; do
     assets+=("-a" "$asset")
 done
 tag_name="${GITHUB_REF##*/}"
