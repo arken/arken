@@ -38,6 +38,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd ark
+          cd arken
           chmod a+x .github/workflows/release.sh
           ./.github/workflows/release.sh
