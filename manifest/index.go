@@ -17,6 +17,11 @@ import (
 )
 
 func (m *Manifest) Index(db *database.DB, force bool) (<-chan database.File, error) {
+	// Grab the manifest lock before starting an index to prevent
+	// other systems from indexing at the same time.
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
 	// Check to see if an existing commit checkpoint exists
 	commit, err := m.getCommit()
 	if err != nil && !os.IsNotExist(err) {

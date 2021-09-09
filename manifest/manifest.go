@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"path/filepath"
+	"sync"
 
 	"github.com/BurntSushi/toml"
 	"github.com/go-git/go-git/v5"
@@ -16,6 +17,7 @@ type Manifest struct {
 	url            string   `toml:"url"`
 	path           string   `toml:"path"`
 	r              *git.Repository
+	lock           *sync.Mutex
 }
 
 // Init Clones/Pulls a Manifest Repository and Parses the Config
@@ -26,6 +28,7 @@ func Init(path, url string) (*Manifest, error) {
 	result := Manifest{
 		path: path,
 		url:  url,
+		lock: &sync.Mutex{},
 	}
 
 	// Check if Git Repository Exists
