@@ -82,9 +82,6 @@ func RunDaemon(r *cmd.Root, s *cmd.Sub) {
 	// Create Task Scheduler
 	tasks := gocron.NewScheduler(time.UTC)
 
-	// Set the max number of concurrent jobs to 3.
-	tasks.SetMaxConcurrentJobs(3, gocron.WaitMode)
-
 	// Configure Arken Tasks
 	// Check for and sync updates to the manifest every hour.
 	_, err = tasks.Every(1).Hours().SingletonMode().Do(engine.SyncManifest)
@@ -98,12 +95,12 @@ func RunDaemon(r *cmd.Root, s *cmd.Sub) {
 	rebalance.SingletonMode()
 
 	// Verify database consistency against manifest
-	verifyDB, err := tasks.Every(1).Weeks().SingletonMode().WaitForSchedule().Do(engine.VerifyDB)
+	verifyDB, err := tasks.Every(5).Days().SingletonMode().WaitForSchedule().Do(engine.VerifyDB)
 	checkError(rFlags, err)
 	verifyDB.SingletonMode()
 
 	// Very datastore consistency against database
-	_, err = tasks.Every(1).Weeks().SingletonMode().WaitForSchedule().Do(engine.VerifyDatastore)
+	_, err = tasks.Every(5).Days().SingletonMode().WaitForSchedule().Do(engine.VerifyDatastore)
 	checkError(rFlags, err)
 
 	// If stats are enabled send stats to the manifest stats peer.
