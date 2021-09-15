@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/dustin/go-humanize"
+	"github.com/shirou/gopsutil/v3/disk"
 )
 
 type report struct {
@@ -27,6 +28,17 @@ func (n *Node) ReportStats() {
 	if err != nil {
 		log.Println(err)
 		return
+	}
+
+	dstat, err := disk.Usage(n.Cfg.Manifest.Path)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	// Don't allow the user to contribute more space than they have.
+	if dstat.Total < totalSpace {
+		totalSpace = dstat.Total
 	}
 
 	usedSpace, err := n.Node.RepoSize()

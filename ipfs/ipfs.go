@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	ipfsConfig "github.com/ipfs/go-ipfs-config"
 	"github.com/ipfs/go-ipfs/core"
@@ -116,8 +117,9 @@ func createFs(ctx context.Context, path string, storageMax string, bootstrapPeer
 	cfg.Reprovider.Strategy = "roots"
 	cfg.Routing.Type = "dhtserver"
 	cfg.Bootstrap = bootstrapPeers
-	cfg.Swarm.ConnMgr.HighWater = 1200
-	cfg.Swarm.ConnMgr.LowWater = 1000
+	cfg.Swarm.ConnMgr.LowWater = 20
+	cfg.Swarm.ConnMgr.HighWater = 40
+	cfg.Swarm.ConnMgr.GracePeriod = time.Minute.String()
 
 	// Create the repo with the ipfsConfig
 	err = fsrepo.Init(path, cfg)
