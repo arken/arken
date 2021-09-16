@@ -26,7 +26,7 @@ type File struct {
 
 // Init opens and connects to the database.
 func Init(path string) (result *DB, err error) {
-	db, err := sql.Open("sqlite3", path+"?cache=shared&mode=memory")
+	db, err := sql.Open("sqlite3", path+"?cache=shared")
 	if err != nil {
 		return nil, err
 	}

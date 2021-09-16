@@ -73,6 +73,7 @@ func (m *Manifest) indexFull(db *database.DB, results chan<- database.File) {
 			if err != nil {
 				return err
 			}
+			defer file.Close()
 
 			// Open the files for reading.
 			scanner := bufio.NewScanner(file)
@@ -106,11 +107,6 @@ func (m *Manifest) indexFull(db *database.DB, results chan<- database.File) {
 				}
 			}
 			if err := scanner.Err(); err != nil {
-				return err
-			}
-			// Close the file after fully parsed.
-			err = file.Close()
-			if err != nil {
 				return err
 			}
 		}

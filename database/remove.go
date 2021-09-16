@@ -30,6 +30,8 @@ func (db *DB) remove(id string) (err error) {
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
+
 	_, err = stmt.Exec(id)
 	return err
 }

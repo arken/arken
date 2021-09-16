@@ -38,6 +38,8 @@ func (db *DB) update(entry File) (err error) {
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
+
 	_, err = stmt.Exec(
 		entry.Name,
 		entry.Size,

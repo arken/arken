@@ -40,7 +40,6 @@ func (db *DB) get(id string) (result File, err error) {
 		&result.Modified,
 		&result.Replications,
 	)
-
 	return result, err
 }
 
@@ -67,6 +66,7 @@ func (db *DB) GetAll(status string, limit, page int) (result []File, err error) 
 	if err != nil {
 		return result, err
 	}
+	defer rows.Close()
 
 	// Iterate through rows found and insert them into the list.
 	for rows.Next() {
@@ -86,12 +86,6 @@ func (db *DB) GetAll(status string, limit, page int) (result []File, err error) 
 		}
 
 		result = append(result, f)
-	}
-
-	// Check for errors and return
-	err = rows.Close()
-	if err != nil {
-		return nil, err
 	}
 
 	if len(result) <= 0 {
@@ -124,6 +118,7 @@ func (db *DB) GetAllOlderThan(age time.Time, limit, page int) (result []File, er
 	if err != nil {
 		return result, err
 	}
+	defer rows.Close()
 
 	// Iterate through rows found and insert them into the list.
 	for rows.Next() {
@@ -143,12 +138,6 @@ func (db *DB) GetAllOlderThan(age time.Time, limit, page int) (result []File, er
 		}
 
 		result = append(result, f)
-	}
-
-	// Check for errors and return
-	err = rows.Close()
-	if err != nil {
-		return nil, err
 	}
 
 	if len(result) <= 0 {

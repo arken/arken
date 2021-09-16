@@ -44,6 +44,8 @@ func (db *DB) insert(entry File) (err error) {
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
+
 	_, err = stmt.Exec(
 		entry.ID,
 		entry.Name,

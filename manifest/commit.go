@@ -12,6 +12,7 @@ func (m *Manifest) getCommit() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer f.Close()
 
 	// Read the commit in
 	bytes, err := io.ReadAll(f)
