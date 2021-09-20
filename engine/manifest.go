@@ -46,7 +46,12 @@ func (n *Node) SyncManifest() {
 		log.Println(err)
 	}
 
-	if len(files) > 0 {
+	// Check if there are any new files indexed
+	// from the manifest.
+	if file, ok := <-files; ok {
+		// Put first file back in queue
+		go func() { files <- file }()
+
 		// Boot adder subsystem
 		toAdder, err := n.FileAdder()
 		if err != nil {

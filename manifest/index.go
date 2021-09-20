@@ -16,7 +16,7 @@ import (
 	"github.com/ipfs/go-cid"
 )
 
-func (m *Manifest) Index(db *database.DB, force bool) (<-chan database.File, error) {
+func (m *Manifest) Index(db *database.DB, force bool) (chan database.File, error) {
 	// Grab the manifest lock before starting an index to prevent
 	// other systems from indexing at the same time.
 	m.lock.Lock()
