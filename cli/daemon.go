@@ -110,6 +110,11 @@ func RunDaemon(r *cmd.Root, s *cmd.Sub) {
 		checkError(rFlags, err)
 	}
 
+	// Check if verbose mode is enabled.
+	if rFlags.Verbose {
+		fmt.Printf("Verbose Mode: Enabled\n")
+	}
+
 	// Start Task Scheduler
 	fmt.Printf("Daemon setup and running\n\n")
 	tasks.StartBlocking()
