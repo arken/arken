@@ -70,7 +70,7 @@ func CreateNode(repoPath string, args NodeConfArgs) (node *Node, err error) {
 	nodeOptions := &core.BuildCfg{
 		Permanent: true,
 		Online:    true,
-		Routing:   libp2p.DHTServerOption,
+		Routing:   libp2p.DHTClientOption,
 		Repo:      fs,
 	}
 	node.node, err = core.NewNode(node.ctx, nodeOptions)
@@ -115,7 +115,7 @@ func createFs(ctx context.Context, path string, storageMax string, bootstrapPeer
 	// Set default ipfsConfig values
 	cfg.Datastore.StorageMax = storageMax
 	cfg.Reprovider.Strategy = "roots"
-	cfg.Routing.Type = "dhtserver"
+	cfg.Routing.Type = "dhtclient"
 	cfg.Bootstrap = bootstrapPeers
 	cfg.Swarm.ConnMgr.LowWater = 20
 	cfg.Swarm.ConnMgr.HighWater = 40
