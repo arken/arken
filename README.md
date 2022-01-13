@@ -126,7 +126,7 @@ number of other nodes hosting them and rebalancing as necessary.
 
 ## License
 
-Copyright 2020-2021 Alec Scott & Arken Team <team@arken.io>
+Copyright 2020-2022 Alec Scott & Arken Team <team@arken.io>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
