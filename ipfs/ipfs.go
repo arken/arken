@@ -79,6 +79,12 @@ func CreateNode(repoPath string, args NodeConfArgs) (node *Node, err error) {
 	}
 	node.node.IsDaemon = true
 
+	// Bootstrap the DHT table for peers.
+	err = node.node.DHT.Bootstrap(node.ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// Attach the Core API to the constructed node
 	node.api, err = coreapi.NewCoreAPI(node.node)
 	return node, err
