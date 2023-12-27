@@ -7,7 +7,7 @@ require (
 	github.com/DataDrake/cli-ng/v2 v2.0.2
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-co-op/gocron v1.11.0
-	github.com/go-git/go-git/v5 v5.4.2
+	github.com/go-git/go-git/v5 v5.11.0
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
 	github.com/ipfs/go-cid v0.1.0
 	github.com/ipfs/go-ipfs v0.11.0
